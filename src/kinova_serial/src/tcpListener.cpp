@@ -12,23 +12,50 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <thread>
+#include <signal.h>
 
 #include <jsoncpp/json/json.h>
 #include <ros/ros.h>
 #include <kinova_msgs/PoseVelocityWithFingers.h>
 
 #define MAXLINE 8192
-const std::string address = "192.168.2.10";
-const float fingerPos[] = {0.0, 50, 100};
+const std::string address = "192.168.2.172";
+const float fingerPos[] = {0.0, 100};
 const float carteVel[] = {0.0, 0.025, 0.04, 0.08};
+char buf[MAXLINE];
+int rec_len = 0;
+bool tcp_open = false;
+std::vector<int> instruct = {0, 0};
+int socketrqt;
+
+void SigintHandler(int sig) {
+  close(socketrqt);
+  tcp_open = false;
+  ROS_INFO_STREAM("tcp disconnected!");
+  ros::shutdown();
+}
+
+void tcpRcvCallback() {
+  while (ros::ok() && tcp_open) {
+    rec_len = recv(socketrqt, buf, MAXLINE, 0);
+    ROS_INFO_THROTTLE(0.5, "the length of tcp packet is %d", rec_len);
+
+    if (rec_len == 2) {
+      instruct[0] = buf[0] - 48;
+      instruct[1] = buf[1] - 48;
+      ROS_INFO("the next instruction instruct is [%d ,%d]", instruct[0], instruct[1]);
+    }
+  }
+}
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "jaka_state_node");
   ros::NodeHandle nh;
+  signal(SIGINT, SigintHandler);
   std::string robot_ip = nh.param("robot_ip", address);
 
   //建立socket通讯
-  int socketrqt;
   struct sockaddr_in servaddr_rqt;
   ROS_INFO_STREAM("tcpListener is connecting to IP address : " << robot_ip);
   const char *address_ptr = robot_ip.c_str();
@@ -52,37 +79,25 @@ int main(int argc, char **argv) {
     ROS_ERROR_STREAM("connect error:" << strerror(errno) << "(errno:" << errno << ")");
     exit(-1);
   }
-  ROS_INFO_STREAM("state_pub_node socket connects successfully!");
+  ROS_INFO_STREAM("tcp socket connects successfully!");
+  tcp_open = true;
 
   ros::Rate loopRate(100.0);
   kinova_msgs::PoseVelocityWithFingers velMsg;
   ros::Publisher velPub =
       nh.advertise<kinova_msgs::PoseVelocityWithFingers>("/j2s7s300_driver/in/cartesian_velocity_with_fingers", 100);
 
-  Json::Reader reader;
-  Json::Value root;
+  std::thread thread1(tcpRcvCallback);
+
   while (ros::ok()) {
-    char buf[MAXLINE];
-    int rec_len = recv(socketrqt, buf, MAXLINE, 0);
-    buf[rec_len] = '\0';
-
-    static std::vector<int> index = {0, 0};
     static float fingerPercent = 0.0;
-    try {
-      if (reader.parse(buf, root)) {
-        index[0] = root["arm_velocity"].asInt();
-        index[1] = root["finger_position"].asInt();
-        ROS_INFO("the next instruction index is [%d ,%d]", index[0], index[1]);
-      }
-    } catch (...) {
-    }
 
-    fingerPercent = index[0] >= 1 && index[0] <= 3 ? fingerPos[index[0] - 1] : fingerPercent;
+    fingerPercent = instruct[0] >= 1 && instruct[0] <= 2 ? fingerPos[instruct[0] - 1] : fingerPercent;
 
-    if (index[1] <= 3) {
-      velMsg.twist_linear_x = carteVel[index[1] - 0];
-    } else if (index[1] <= 6) {
-      velMsg.twist_linear_x = -carteVel[index[1] - 3];
+    if (instruct[1] <= 3) {
+      velMsg.twist_linear_x = carteVel[instruct[1] - 0];
+    } else if (instruct[1] <= 6) {
+      velMsg.twist_linear_x = -carteVel[instruct[1] - 3];
     } else {
       velMsg.twist_linear_x = 0.0;
     }
@@ -94,8 +109,6 @@ int main(int argc, char **argv) {
     loopRate.sleep();
   }
 
-  //关闭socket连接
-  close(socketrqt);
-  ROS_INFO_STREAM("Robot disconnected!");
+  thread1.join();
   return 0;
 }

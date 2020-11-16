@@ -51,6 +51,10 @@ netinet/in.h
 -
 arpa/inet.h
 -
+thread
+-
+signal.h
+-
 jsoncpp/json/json.h
 -
 ros/ros.h
