@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<!-- j2s7s300 refers to jaco v2 7DOF spherical 3fingers -->
+
+
+<robot xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:gazebo="http://playerstage.sourceforge.net/gazebo/xmlschema/#gz"
+    xmlns:model="http://playerstage.sourceforge.net/gazebo/xmlschema/#model"
+	xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+	xmlns:body="http://playerstage.sourceforge.net/gazebo/xmlschema/#body"
+    xmlns:geom="http://playerstage.sourceforge.net/gazebo/xmlschema/#geom"
+    xmlns:joint="http://playerstage.sourceforge.net/gazebo/xmlschema/#joint"
+	xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+	xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+	xmlns:rendering="http://playerstage.sourceforge.net/gazebo/xmlschema/#rendering"
+    xmlns:renderable="http://playerstage.sourceforge.net/gazebo/xmlschema/#renderable"
+    xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics"
+	xmlns:xacro="http://www.ros.org/wiki/xacro" name="j2s7s300">
+
+
+  <xacro:property name="M_PI" value="3.1415926"/>
+  <!-- root link, on the ground just below the model origin -->
+
+  <link name="base_footprint">
+  </link>
+
+  <joint name="base_link_joint" type="fixed">
+    <origin xyz="0.0 0 0" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="agv_base_link" />
+  </joint>
+
+  <link name="agv_base_link">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="10000" />
+      <inertia ixx="100000" ixy="0.0" ixz="5.0"
+        iyy="10000" iyz="0.0"
+        izz="100000.0" />
+    </inertial>
+    <visual>
+     <origin
+        xyz="-0.20 -0.445 0"
+        rpy="1.5708 0 1.5708"/>
+      <geometry>
+      <mesh
+          filename="$(find kinova_description)/meshes/WMRM.STL" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+         xyz="0.32 0 0.25"        
+         rpy="0 0 0" /> 
+      <geometry>
+        <box size="0.8 0.615 0.5" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="laser_link0"/>
+  <link name="laser_link1"/>
+
+
+  <joint name="laser0_joint" type="fixed">
+    <origin xyz="0.765 0.365 0.36" rpy="3.1419 0 3.9269" />
+    <parent link="agv_base_link"/>
+    <child link="laser_link0"/>
+  </joint> 
+    <joint name="laser1_joint" type="fixed">
+    <origin xyz="-0.075 -0.365 0.36" rpy="3.14159 0 -0.7854" />
+    <parent link="agv_base_link"/>
+    <child link="laser_link1"/>
+  </joint> 
+
+  <gazebo reference="laser_link0">
+    <material>Gazebo/Blue</material>
+    <turnGravityOff>false</turnGravityOff>
+    <sensor type="ray" name="head_hokuyo_sensor0">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>${-M_PI}</min_angle>
+            <max_angle>${M_PI}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>10.0</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
+      <plugin name="gazebo_ros_head_hokuyo1_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan0</topicName>
+        <frameName>laser_link0</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="laser_link1">
+    <material>Gazebo/Blue</material>
+    <turnGravityOff>false</turnGravityOff>
+    <sensor type="ray" name="head_hokuyo_sensor1">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>${-M_PI}</min_angle>
+            <max_angle>${M_PI}</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>10.0</max>
+          <resolution>0.001</resolution>
+        </range>
+      </ray>
+      <plugin name="gazebo_ros_head_hokuyo1_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan1</topicName>
+        <frameName>laser_link1</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+  <plugin name="base_controller" filename="libgazebo_ros_planar_move.so">
+  <commandTopic>cmd_vel</commandTopic>
+  <odometryTopic>odom</odometryTopic>
+  <odometryFrame>/odom</odometryFrame>
+  <odometryRate>100.0</odometryRate>
+  <robotBaseFrame>base_footprint</robotBaseFrame>
+  <broadcastTF>true</broadcastTF>
+  <enableYAxis>0</enableYAxis>
+  </plugin>
+  </gazebo>
+    <xacro:include filename="$(find kinova_description)/urdf/j2s7s300.xacro"/>
+
+  <link name="root"/>
+
+  <!-- for gazebo 
+  <link name="world"/>-->
+  
+  <joint name="connect_root_and_wheelchair" type="fixed">
+    <child link="root" />
+    <parent link="base_footprint" />
+    <origin xyz="0.715 0.32 0.513" rpy="0 0 1.5708" />    
+  </joint>  -->
+
+  <xacro:property name="robot_root" value="root" />
+
+  <xacro:j2s7s300  base_parent="${robot_root}"/>
+
+</robot>
