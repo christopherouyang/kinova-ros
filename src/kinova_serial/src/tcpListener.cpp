@@ -22,7 +22,7 @@
 #define MAXLINE 8192
 const std::string address = "192.168.2.172";
 const float fingerPos[] = {0.0, 100};
-const float carteVel[] = {0.0, 0.025, 0.04, 0.08};
+const float carteVel[] = {0.0, 0.2, 0.5, 0.8};
 char buf[MAXLINE];
 int rec_len = 0;
 bool tcp_open = false;
@@ -91,20 +91,21 @@ int main(int argc, char **argv) {
 
   while (ros::ok()) {
     static float fingerPercent = 0.0;
+    static float angularVel = 0.0;
 
     fingerPercent = instruct[0] >= 1 && instruct[0] <= 2 ? fingerPos[instruct[0] - 1] : fingerPercent;
 
     if (instruct[1] <= 3) {
-      velMsg.twist_linear_x = carteVel[instruct[1] - 0];
+      angularVel = carteVel[instruct[1] - 0];
     } else if (instruct[1] <= 6) {
-      velMsg.twist_linear_x = -carteVel[instruct[1] - 3];
+      angularVel = -carteVel[instruct[1] - 3];
     } else {
-      velMsg.twist_linear_x = 0.0;
+      angularVel = 0.0;
     }
+    velMsg.twist_angular_z = angularVel;
     velMsg.fingers_closure_percentage = fingerPercent;
 
-    ROS_INFO_THROTTLE(1.0, "the velocity of x is %f, the percentage of finger is %f", velMsg.twist_linear_x,
-                      fingerPercent);
+    ROS_INFO_THROTTLE(1.0, "the velocity of x is %f, the percentage of finger is %f", angularVel, fingerPercent);
     velPub.publish(velMsg);
     loopRate.sleep();
   }
