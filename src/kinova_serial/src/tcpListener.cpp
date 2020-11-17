@@ -18,35 +18,27 @@
 #include <jsoncpp/json/json.h>
 #include <ros/ros.h>
 #include <kinova_msgs/PoseVelocityWithFingers.h>
+#include <kinova_msgs/ArmJointAnglesActionGoal.h>
+#include <kinova_msgs/JointAngles.h>
 
 #define MAXLINE 8192
 const std::string address = "192.168.2.172";
-const float fingerPos[] = {0.0, 100};
-const float carteVel[] = {0.0, 0.2, 0.5, 0.8};
-char buf[MAXLINE];
-int rec_len = 0;
-bool tcp_open = false;
-std::vector<int> instruct = {0, 0};
+const float jointPos5[] = {0.0, 20, 40};
+const float jointPos6[] = {0.0, 15, 30, 45};
+bool pose_update = false;
+
 int socketrqt;
+kinova_msgs::JointAngles curAngles;
 
 void SigintHandler(int sig) {
   close(socketrqt);
-  tcp_open = false;
   ROS_INFO_STREAM("tcp disconnected!");
   ros::shutdown();
 }
 
-void tcpRcvCallback() {
-  while (ros::ok() && tcp_open) {
-    rec_len = recv(socketrqt, buf, MAXLINE, 0);
-    ROS_INFO_THROTTLE(0.5, "the length of tcp packet is %d", rec_len);
-
-    if (rec_len == 2) {
-      instruct[0] = buf[0] - 48;
-      instruct[1] = buf[1] - 48;
-      ROS_INFO("the next instruction instruct is [%d ,%d]", instruct[0], instruct[1]);
-    }
-  }
+void posCallback(const kinova_msgs::JointAngles &msg) {
+  curAngles = msg;
+  pose_update = true;
 }
 
 int main(int argc, char **argv) {
@@ -80,36 +72,46 @@ int main(int argc, char **argv) {
     exit(-1);
   }
   ROS_INFO_STREAM("tcp socket connects successfully!");
-  tcp_open = true;
 
-  ros::Rate loopRate(100.0);
-  kinova_msgs::PoseVelocityWithFingers velMsg;
-  ros::Publisher velPub =
-      nh.advertise<kinova_msgs::PoseVelocityWithFingers>("/j2s7s300_driver/in/cartesian_velocity_with_fingers", 100);
+  ros::Rate loopRate(20.0);
+  kinova_msgs::ArmJointAnglesActionGoal jointGoal;
+  ros::Publisher goalPub =
+      nh.advertise<kinova_msgs::ArmJointAnglesActionGoal>("/j2s7s300_driver/joints_action/joint_angles/goal", 100);
 
-  std::thread thread1(tcpRcvCallback);
+  ros::Subscriber posSub = nh.subscribe("/j2s7s300_driver/out/joint_angles", 1, posCallback);
 
   while (ros::ok()) {
-    static float fingerPercent = 0.0;
-    static float angularVel = 0.0;
+    char buf[MAXLINE];
+    std::vector<int> instruct = {0, 0};
+    int rec_len = recv(socketrqt, buf, MAXLINE, 0);
+    ROS_INFO_THROTTLE(0.5, "the length of tcp packet is %d", rec_len);
 
-    fingerPercent = instruct[0] >= 1 && instruct[0] <= 2 ? fingerPos[instruct[0] - 1] : fingerPercent;
+    if (rec_len == 2) {
+      instruct[0] = buf[0] - 48;
+      instruct[1] = buf[1] - 48;
+      ROS_INFO("the next instruction instruct is [%d ,%d]", instruct[0], instruct[1]);
+    }
+
+    float inc1 = instruct[0] >= 1 && instruct[0] <= 2 ? jointPos5[instruct[0] - 1] : 0.0;
+    float inc2 = 0.0;
 
     if (instruct[1] <= 3) {
-      angularVel = carteVel[instruct[1] - 0];
+      inc2 = jointPos6[instruct[1] - 0];
     } else if (instruct[1] <= 6) {
-      angularVel = -carteVel[instruct[1] - 3];
-    } else {
-      angularVel = 0.0;
+      inc2 = -jointPos6[instruct[1] - 3];
     }
-    velMsg.twist_angular_z = angularVel;
-    velMsg.fingers_closure_percentage = fingerPercent;
+    if (!pose_update) {
+      continue;
+    }
+    jointGoal.goal.angles = curAngles;
+    jointGoal.goal.angles.joint5 += inc1;
+    jointGoal.goal.angles.joint6 += inc2;
 
-    ROS_INFO_THROTTLE(1.0, "the velocity of x is %f, the percentage of finger is %f", angularVel, fingerPercent);
-    velPub.publish(velMsg);
+    ROS_INFO_THROTTLE(1.0, "the goal of joint 5 is %f, joint6 is %f", jointGoal.goal.angles.joint5,
+                      jointGoal.goal.angles.joint6);
+    goalPub.publish(jointGoal);
     loopRate.sleep();
   }
 
-  thread1.join();
   return 0;
 }
