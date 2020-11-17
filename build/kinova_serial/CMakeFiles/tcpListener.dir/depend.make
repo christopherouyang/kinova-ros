@@ -3,10 +3,15 @@
 
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmJointAnglesActionGoal.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmJointAnglesGoal.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmPoseActionGoal.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmPoseGoal.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/JointAngles.h
-kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/PoseVelocityWithFingers.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /home/wmrm/kinova-ros/src/kinova_serial/src/tcpListener.cpp
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/actionlib_msgs/GoalID.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/geometry_msgs/Point.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/geometry_msgs/Pose.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/geometry_msgs/PoseStamped.h
+kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/geometry_msgs/Quaternion.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/ros/advertise_options.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/ros/advertise_service_options.h
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o: /opt/ros/melodic/include/ros/assert.h

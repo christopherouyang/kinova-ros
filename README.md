@@ -243,7 +243,7 @@ The joint velocity is set to publish at a frequency of 100Hz, due to the DSP ins
 
 Therefore, the publishing rate at 100Hz is not an optional argument, but a requirement.
 
-### ROS service commands
+  ### ROS service commands
 Users can home the robot by the command below. It takes no argument and brings the robot to pre-defined home position. The command supports customized home position that users can define by using the SDK or JacoSoft as well.
 `/'${kinova_robotType}_driver'/in/home_arm`
 

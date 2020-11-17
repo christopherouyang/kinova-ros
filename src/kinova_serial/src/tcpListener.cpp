@@ -17,18 +17,18 @@
 
 #include <jsoncpp/json/json.h>
 #include <ros/ros.h>
-#include <kinova_msgs/PoseVelocityWithFingers.h>
+#include <kinova_msgs/ArmPoseActionGoal.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <kinova_msgs/ArmJointAnglesActionGoal.h>
 #include <kinova_msgs/JointAngles.h>
 
 #define MAXLINE 8192
 const std::string address = "192.168.2.172";
-const float jointPos5[] = {0.0, 20, 40};
-const float jointPos6[] = {0.0, 15, 30, 45};
 bool pose_update = false;
-
+bool joint_pose_update = false;
 int socketrqt;
 kinova_msgs::JointAngles curAngles;
+geometry_msgs::PoseStamped curPose;
 
 void SigintHandler(int sig) {
   close(socketrqt);
@@ -36,8 +36,17 @@ void SigintHandler(int sig) {
   ros::shutdown();
 }
 
-void posCallback(const kinova_msgs::JointAngles &msg) {
-  curAngles = msg;
+void jointPosCallback(const kinova_msgs::JointAngles &msg) {
+  if (!joint_pose_update) {
+    curAngles = msg;
+  }
+  joint_pose_update = true;
+}
+
+void toolPoseCallback(const geometry_msgs::PoseStamped &msg) {
+  if (!pose_update) {
+    curPose = msg;
+  }
   pose_update = true;
 }
 
@@ -73,43 +82,58 @@ int main(int argc, char **argv) {
   }
   ROS_INFO_STREAM("tcp socket connects successfully!");
 
-  ros::Rate loopRate(20.0);
   kinova_msgs::ArmJointAnglesActionGoal jointGoal;
   ros::Publisher goalPub =
       nh.advertise<kinova_msgs::ArmJointAnglesActionGoal>("/j2s7s300_driver/joints_action/joint_angles/goal", 100);
+  ros::Subscriber jointSub = nh.subscribe("/j2s7s300_driver/out/joint_angles", 1, jointPosCallback);
 
-  ros::Subscriber posSub = nh.subscribe("/j2s7s300_driver/out/joint_angles", 1, posCallback);
+  kinova_msgs::ArmPoseActionGoal poseGoal;
+  ros::Publisher poseGoalPub =
+      nh.advertise<kinova_msgs::ArmPoseActionGoal>("/j2s7s300_driver/pose_action/tool_pose/goal", 100);
+  ros::Subscriber poseSub = nh.subscribe("/j2s7s300_driver/out/tool_pose", 1, toolPoseCallback);
 
+  ros::Rate loopRate(5.0);
   while (ros::ok()) {
     char buf[MAXLINE];
-    std::vector<int> instruct = {0, 0};
+    std::vector<int> instruct(2, 0);
     int rec_len = recv(socketrqt, buf, MAXLINE, 0);
-    ROS_INFO_THROTTLE(0.5, "the length of tcp packet is %d", rec_len);
 
-    if (rec_len == 2) {
-      instruct[0] = buf[0] - 48;
-      instruct[1] = buf[1] - 48;
+    if (rec_len == 4) {
+      instruct[0] = ((buf[0] - 48) * 10 + buf[1] - 48);
+      instruct[1] = ((buf[2] - 48) * 10 + buf[3] - 48);
       ROS_INFO("the next instruction instruct is [%d ,%d]", instruct[0], instruct[1]);
     }
+    static float last_inc1 = 0;
+    static float last_inc2 = 0;
+    // float inc1 = (instruct[0] / 34 - 1) * 20;
+    // float inc2 = (instruct[1] / 34 - 1) * 45;
 
-    float inc1 = instruct[0] >= 1 && instruct[0] <= 2 ? jointPos5[instruct[0] - 1] : 0.0;
-    float inc2 = 0.0;
+    float inc1 = (instruct[0] / 34 - 1) * 0.15;
+    float inc2 = (instruct[1] / 34 - 1) * 0.2;
 
-    if (instruct[1] <= 3) {
-      inc2 = jointPos6[instruct[1] - 0];
-    } else if (instruct[1] <= 6) {
-      inc2 = -jointPos6[instruct[1] - 3];
+    if (pose_update && joint_pose_update) {
+      if (last_inc1 != inc1 || last_inc2 != inc2) {
+        // jointGoal.goal.angles = curAngles;
+        // jointGoal.goal.angles.joint4 += inc1;
+        // jointGoal.goal.angles.joint6 += inc2;
+        // ROS_INFO_THROTTLE(1.0, "the goal of joint 5 is %f, joint6 is %f", jointGoal.goal.angles.joint5,
+        //                   jointGoal.goal.angles.joint6);
+        // goalPub.publish(jointGoal);
+
+        poseGoal.goal.pose = curPose;
+        poseGoal.goal.pose.pose.position.z += inc1;
+        poseGoal.goal.pose.pose.position.x += inc2;
+        ROS_INFO_THROTTLE(1.0, "the goal of x is %f, z is %f", poseGoal.goal.pose.pose.position.x,
+                          poseGoal.goal.pose.pose.position.x);
+        poseGoalPub.publish(poseGoal);
+      }
+      last_inc1 = inc1;
+      last_inc2 = inc2;
+    } else {
+      ROS_WARN("wait to update new status of robot");
     }
-    if (!pose_update) {
-      continue;
-    }
-    jointGoal.goal.angles = curAngles;
-    jointGoal.goal.angles.joint5 += inc1;
-    jointGoal.goal.angles.joint6 += inc2;
 
-    ROS_INFO_THROTTLE(1.0, "the goal of joint 5 is %f, joint6 is %f", jointGoal.goal.angles.joint5,
-                      jointGoal.goal.angles.joint6);
-    goalPub.publish(jointGoal);
+    ros::spinOnce();
     loopRate.sleep();
   }
 

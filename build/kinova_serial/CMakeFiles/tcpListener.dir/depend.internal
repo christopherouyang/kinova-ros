@@ -4,10 +4,15 @@
 kinova_serial/CMakeFiles/tcpListener.dir/src/tcpListener.cpp.o
  /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmJointAnglesActionGoal.h
  /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmJointAnglesGoal.h
+ /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmPoseActionGoal.h
+ /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/ArmPoseGoal.h
  /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/JointAngles.h
- /home/wmrm/kinova-ros/src/kinova_serial/../../devel/include/kinova_msgs/PoseVelocityWithFingers.h
  /home/wmrm/kinova-ros/src/kinova_serial/src/tcpListener.cpp
  /opt/ros/melodic/include/actionlib_msgs/GoalID.h
+ /opt/ros/melodic/include/geometry_msgs/Point.h
+ /opt/ros/melodic/include/geometry_msgs/Pose.h
+ /opt/ros/melodic/include/geometry_msgs/PoseStamped.h
+ /opt/ros/melodic/include/geometry_msgs/Quaternion.h
  /opt/ros/melodic/include/ros/advertise_options.h
  /opt/ros/melodic/include/ros/advertise_service_options.h
  /opt/ros/melodic/include/ros/assert.h
