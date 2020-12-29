@@ -1,8 +1,0 @@
-prefix=/home/wmrm/kinova-ros/install
-
-Name: kinova_serial
-Description: Description of kinova_serial
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
