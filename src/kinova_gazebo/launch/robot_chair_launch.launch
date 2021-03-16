@@ -62,10 +62,9 @@
   </include>
 
   <!-- rqt launch file -->
-  <!--  
-  <include file="$(find kinova_control)/launch/$kinova_rqt.launch">
+  <!-- <include file="$(find kinova_control)/launch/kinova_rqt.launch">
     <arg name="kinova_robotType" value="$(arg kinova_robotName)"/>
-  </include> 
-  -->
+  </include>  -->
+ 
 </launch>
 

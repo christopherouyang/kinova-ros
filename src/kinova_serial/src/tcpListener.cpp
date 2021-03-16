@@ -51,7 +51,7 @@ void toolPoseCallback(const geometry_msgs::PoseStamped &msg) {
 }
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "jaka_state_node");
+  ros::init(argc, argv, "tcp_listener");
   ros::NodeHandle nh;
   signal(SIGINT, SigintHandler);
   std::string robot_ip = nh.param("robot_ip", address);
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
   ros::Rate loopRate(5.0);
   while (ros::ok()) {
     char buf[MAXLINE];
-    std::vector<int> instruct(2, 0);
+    std::vector<int> instruct(2, 34);
     int rec_len = recv(socketrqt, buf, MAXLINE, 0);
 
     if (rec_len == 4) {
