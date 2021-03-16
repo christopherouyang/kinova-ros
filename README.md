@@ -126,7 +126,6 @@ sudo cp kinova_driver/udev/10-kinova-arm.rules /etc/udev/rules.d/
 - *robot mode* `{s|a}` can be in *service* or *assistive*
 - *robot hand* `{2|3}` may equipped with *2 fingers* or *3 fingers* gripper. 
 - The last two positions are *undefined* and *reserved* for further features.
-[j2s7s3]
 
 **eg**: `j2n6s300` (default value) refers to *jaco v2 6DOF service 3 fingers*. Please be aware that not all options are valided for different robot types.
 
@@ -243,7 +242,7 @@ The joint velocity is set to publish at a frequency of 100Hz, due to the DSP ins
 
 Therefore, the publishing rate at 100Hz is not an optional argument, but a requirement.
 
-  ### ROS service commands
+### ROS service commands
 Users can home the robot by the command below. It takes no argument and brings the robot to pre-defined home position. The command supports customized home position that users can define by using the SDK or JacoSoft as well.
 `/'${kinova_robotType}_driver'/in/home_arm`
 
