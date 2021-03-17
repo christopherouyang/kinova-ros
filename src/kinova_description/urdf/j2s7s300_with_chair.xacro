@@ -171,7 +171,7 @@
   <joint name="connect_robot_and_wheelchair" type="fixed">
     <child link="robot_root" />
     <parent link="base_footprint" />
-    <origin xyz="0.6845 0.33 0.45" rpy="0 0 1.5708" />    
+    <origin xyz="0.6845 0.33 0.5" rpy="0 0 1.5708" />    
   </joint>  -->
 
   <xacro:property name="robot_root" value="robot_root" />
