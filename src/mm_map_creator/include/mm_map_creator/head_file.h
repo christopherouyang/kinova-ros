@@ -29,9 +29,9 @@
 #include <tf2_ros/transform_broadcaster.h>
 
 // head file for Eigen
-#include <Eigen/Eigen>  
-#include <Eigen/Geometry> 
-#include <Eigen/Core>  
+#include <Eigen/Eigen>
+#include <Eigen/Geometry>
+#include <Eigen/Core>
 
 // head file for pcl
 #include <pcl/io/pcd_io.h>
@@ -59,12 +59,12 @@
 
 using std::cout;
 using std::endl;
-using std::string;
 using std::setw;
+using std::string;
 
-const int JOINT_NUMBER = 9;
-const int UR_JOINT_NUMBER = 6;
-const int AGV_JOINT_NUMBER = 3;
-const double PI = 3.1415926536;
+constexpr int JOINT_NUMBER = 7;
+constexpr int UR_JOINT_NUMBER = 7;
+constexpr int AGV_JOINT_NUMBER = 0;
+constexpr double PI = 3.1415926536;
 
 #endif
