@@ -73,3 +73,6 @@ kvh_driver/src/kvh_driver/
 
 # VS code config
 .vscode/
+
+# pointcloud
+*.pcd

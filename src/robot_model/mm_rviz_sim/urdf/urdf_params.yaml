@@ -1,0 +1,12 @@
+wall_forward: 5.0            
+wall_back: 1.0                   
+wall_left: 3.0               
+wall_right: 3.0    
+visual_height: 1.0
+visual_thickness: 0.02 
+obs1_x: 1.0
+obs1_y: 2.0
+obs2_x: 3.0
+obs2_y: 1.8
+obs3_x: 1.6
+obs3_y: -2.0         

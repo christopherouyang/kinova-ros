@@ -1,0 +1,19 @@
+<launch>
+    <arg name="sim" default="false"/>
+    <arg name="human" default="false"/>
+    <include file="$(find mm_rviz_sim)/launch/ur5_agv_start.launch">
+        <arg name="sim" value="$(arg sim)"/>
+        <arg name="human" value="$(arg human)"/>
+    </include>
+
+    <group if="$(arg human)">
+        <include file="$(find mm_human_moveit_config)/launch/move_group.launch"/>
+    </group>   
+    <group unless="$(arg human)">
+        <include file="$(find mm_moveit_config)/launch/move_group.launch"/>
+    </group>   
+
+    <rosparam file="$(find mm_map_creator)/config/joint_names.yaml" command="load"/>
+    <rosparam file="$(find mm_map_creator)/config/joint_value_limits.yaml" command="load"/>
+    <rosparam file="$(find mm_map_creator)/config/default_values.yaml" command="load"/>
+</launch>

@@ -1,0 +1,12 @@
+<launch>
+    <!--to control the robot in simulation environment-->
+    <arg name="sim" default="true"/>
+    <arg name="human" default="true"/>
+    <include file="$(find mm_rviz_sim)/launch/ur5_agv_start.launch">
+        <arg name="sim" value="$(arg sim)"/>
+        <arg name="human" value="$(arg human)"/>
+    </include>
+    <rosparam file="$(find mm_map_creator)/config/joint_names.yaml" command="load"/>
+    <rosparam file="$(find mm_map_creator)/config/joint_value_limits.yaml" command="load"/>
+    <rosparam file="$(find mm_map_creator)/config/default_values.yaml" command="load"/>
+</launch>

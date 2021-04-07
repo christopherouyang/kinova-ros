@@ -1,0 +1,6 @@
+int64 method  # 0 cm_patch, 1 orm with good method, 2 orm with bad method
+float64[] current_agv_pose
+float64[] target_eef_pose_vector
+---
+float64[] base_pose_cloud 
+float64 cloud_size
