@@ -8,6 +8,19 @@ mm_sampling::mm_sampling() {
   srand((int)time(0));
 }
 
+static void ShowPercent(int percent) {
+  cout << "\033[32m"
+       << "\r"
+       << "[" << percent << "\%"
+       << "]"
+       << "\033[0m";
+  for (int j = 0; j <= percent; j++) {
+    cout << "\033[32m"
+         << ">"
+         << "\033[0m";
+  }
+}
+
 bool mm_sampling::rm_down_sample(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud,
                                  pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud_down_sample, int sample_number) {
   std::multiset<std::pair<double, std::vector<double> > > rm_set;
@@ -96,24 +109,28 @@ bool mm_sampling::makeCMbyCartesianSpaceSampling(pcl::PointCloud<pcl::PointNorma
             for (double yaw = initial_yaw - yaw_range; yaw <= initial_yaw + yaw_range;
                  yaw += cm_orientation_resolution) {
               std::vector<double> target_pose = {x, y, z, roll, pitch, yaw};
-              if (isProperIKExist(target_pose, ur_ref_joints, agv_joint_values, joint_values) &&
-                  !collision_check.isCollision(joint_values)) {
-                for (int i = 0; i < 6; i++)
-                  amm_joint_values[i + 3] = joint_values[i];
-                double manipulability = kinematics.GetManipulability(amm_joint_values);
-                if (manipulability > 60)  // 当可操作度大于一定数值时，才保存
-                {
-                  pointnormal.x = x;
-                  pointnormal.y = y;
-                  pointnormal.z = z;
-                  pointnormal.normal_x = roll;
-                  pointnormal.normal_y = pitch;
-                  pointnormal.normal_z = yaw;
-                  pointnormal.curvature = manipulability;
-                  rm_cloud->push_back(pointnormal);
-                  count++;
-                }
+              if (!isProperIKExist(target_pose, ur_ref_joints, agv_joint_values, joint_values) ||
+                  collision_check.isCollision(joint_values)) {
+                continue;
               }
+
+              for (int i = 0; i < 6; i++)
+                amm_joint_values[i + 3] = joint_values[i];
+
+              double manipulability = kinematics.GetManipulability(amm_joint_values);
+              if (manipulability < 60) {  // 当可操作度大于一定数值时，才保存
+                continue;
+              }
+
+              pointnormal.x = x;
+              pointnormal.y = y;
+              pointnormal.z = z;
+              pointnormal.normal_x = roll;
+              pointnormal.normal_y = pitch;
+              pointnormal.normal_z = yaw;
+              pointnormal.curvature = manipulability;
+              rm_cloud->push_back(pointnormal);
+              count++;
             }
           }
         }
@@ -223,39 +240,34 @@ void mm_sampling::GetAllRPYFromPoseMatrix(Eigen::Affine3d pose_matrix, std::vect
 
 /****************************************joint space sampling****************************************/
 // 目前关节生成的点云仅仅用来做可视化
-bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, int max_sample_point) {
+bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, int max_spl_pt) {
   std::vector<double> joint_values(6, 0);
   std::vector<double> end_pose_vector(6, 0);  // 存储末端位姿
   Eigen::Affine3d end_pose_matrix;            // 以矩阵的形式存储末端位姿
-  std::vector<double> manip_vector(max_sample_point);  // 存储机器人在不同位型下的可操作度，方便后续进行归一化
+  double manip{-1.0}, max_mainp{-1.0};
 
-  int count = 0, percent_before = 0;
-  cout << "Creating reachability map, please wait!" << endl;
+  int percent_before = 0;
+  ROS_INFO("Creating reachability map, please wait!");
   for (int i = 0; i < 100; i++)
     cout << "=";
 
-  for (unsigned int i = 0; i < max_sample_point;) {
+  for (unsigned int i = 0; i < max_spl_pt; i++) {
     joint_space_sampling(joint_values);  // 更新ur和amm关节值
     if (collision_check.isCollision(joint_values))
-      continue;                                                     // 舍弃碰撞的点
+      continue;  // 舍弃碰撞的点
+
     end_pose_matrix = kinematics.GetTotalHomoMatrix(joint_values);  // eef相对于agv_base_link的齐次变换矩阵
-
     convertPoseToPoseVector(end_pose_matrix, end_pose_vector);
+    manip = kinematics.GetManipulability(joint_values);
 
-    manip_vector[i] = kinematics.GetManipulability(joint_values);
-    int percent = double(i) / max_sample_point * 100;
+    int percent = double(i) / max_spl_pt * 100;
     if (percent > percent_before) {
       percent_before += 1;
-      cout << "\033[32m"
-           << "\r"
-           << "[" << percent << "\%"
-           << "]"
-           << "\033[0m";
-      for (int j = 0; j <= percent; j++)
-        cout << "\033[32m"
-             << ">"
-             << "\033[0m";
+      ShowPercent(percent);
     }
+
+    max_mainp = std::max(max_mainp, manip);
+
     pcl::PointNormal pointnormal;
     pointnormal.x = end_pose_vector[0];
     pointnormal.y = end_pose_vector[1];
@@ -263,15 +275,12 @@ bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::
     pointnormal.normal_x = end_pose_vector[3];
     pointnormal.normal_y = end_pose_vector[4];
     pointnormal.normal_z = end_pose_vector[5];
-    pointnormal.curvature = manip_vector[i];
+    pointnormal.curvature = manip;
     rm_cloud->push_back(pointnormal);
-    i++;
   }
   cout << endl;
 
-  std::cout << "sampling completed" << std::endl;
-  double max_manip = (*std::max_element(manip_vector.begin(), manip_vector.end()));
-  ROS_INFO_STREAM("Max manipulability is: " << (max_manip));
+  ROS_INFO_STREAM("Max manipulability is: " << max_mainp);
   ROS_INFO("Reachability map completed!!!");
   return true;
 }

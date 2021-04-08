@@ -15,7 +15,7 @@ class mm_sampling {
   bool makeCMbyCartesianSpaceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud,
                                       pcl::PointCloud<pcl::PointNormal>::Ptr des_rm_cloud,
                                       double cm_translation_resolution, double cm_orientation_resolution);
-  bool makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, int max_sample_point);
+  bool makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, int max_spl_pt);
 
  private:
   std::vector<std::string> joint_names;  // ur机器人的关节名称，用来从参数服务器加载ur机器人的关节极限

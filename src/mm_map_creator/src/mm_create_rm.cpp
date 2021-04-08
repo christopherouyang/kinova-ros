@@ -6,7 +6,7 @@
 
 #include "mm_map_creator/mm_sampling.h"
 int main(int argc, char *argv[]) {
-  ros::init(argc, argv, "mm_create_reachability_map");
+  ros::init(argc, argv, "mm_create_rm");
   ros::AsyncSpinner spinner(1);
   spinner.start();
   ros::NodeHandle nh;

@@ -63,8 +63,8 @@ target_compile_options(mm_base_placement PRIVATE ${OpenMP_FLAGS})
 target_link_libraries(mm_base_placement mm_motion_planner ${catkin_LIBRARIES} ${OpenMP_LIBS})
 
 # create rm
-add_executable(mm_create_reachability_map src/mm_create_reachability_map.cpp)
-target_link_libraries(mm_create_reachability_map mm_sampling ${catkin_LIBRARIES})
+add_executable(mm_create_rm src/mm_create_rm.cpp)
+target_link_libraries(mm_create_rm mm_sampling ${catkin_LIBRARIES})
 
 # rm down sample
 add_executable(mm_down_sampling src/mm_down_sampling.cpp)
