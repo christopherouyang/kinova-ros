@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ros::param::get("default_values/max_sampling_point", max_point);
   }
 
-  std::string pcd_file = "mm_n" + std::to_string(max_point) + "_inverse_reachability.pcd";
+  std::string pcd_file = "mm_n" + std::to_string(max_point) + "_irm.pcd";
   std::string pcd_filename = path + pcd_file;
 
   pcl::PointCloud<pcl::PointNormal>::Ptr irm_cloud(new pcl::PointCloud<pcl::PointNormal>);
@@ -34,9 +34,9 @@ int main(int argc, char *argv[]) {
 
   mm_display::mm_display display;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr irm_cloud_display(new pcl::PointCloud<pcl::PointXYZRGB>);
-  display.display_irm(irm_cloud, translation_max_range, new_resolution, irm_cloud_display);
+  display.display_map(irm_cloud, translation_max_range, new_resolution, irm_cloud_display);
 
-  irm_cloud_display->header.frame_id = "agv_base_link";
+  irm_cloud_display->header.frame_id = "root";
   ROS_INFO_STREAM("Point cloud size is: " << irm_cloud_display->width);
 
   ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("reachability_map", 1);

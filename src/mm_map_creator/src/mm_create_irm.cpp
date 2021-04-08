@@ -4,18 +4,17 @@
 
 #include "mm_map_creator/head_file.h"
 
-void convertPoseToRPY(const Eigen::Affine3d pose, std::vector<double>& end_pose_vector_and_manip) {
+void convertPoseToRPY(const Eigen::Affine3d pose, std::vector<double>& end_pose) {
   Eigen::Matrix3d rotation_matrix;
   rotation_matrix << pose(0, 0), pose(0, 1), pose(0, 2), pose(1, 0), pose(1, 1), pose(1, 2), pose(2, 0), pose(2, 1),
       pose(2, 2);
   Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);
-  end_pose_vector_and_manip[0] = pose(0, 3);
-  end_pose_vector_and_manip[1] = pose(1, 3);
-  end_pose_vector_and_manip[2] = pose(2, 3);
-  end_pose_vector_and_manip[3] = euler_angles(2);  // roll
-  end_pose_vector_and_manip[4] = euler_angles(1);  // pitch
-  end_pose_vector_and_manip[5] = euler_angles(0);  // yaw
-                                                   // 注意rpy的顺序
+  end_pose[0] = pose(0, 3);
+  end_pose[1] = pose(1, 3);
+  end_pose[2] = pose(2, 3);
+  end_pose[3] = euler_angles(2);  // roll  注意rpy的顺序
+  end_pose[4] = euler_angles(1);  // pitch
+  end_pose[5] = euler_angles(0);  // yaw
 }
 
 int main(int argc, char* argv[]) {
@@ -24,7 +23,7 @@ int main(int argc, char* argv[]) {
 
   std::string path(ros::package::getPath("mm_map_creator") + "/maps/");
   int max_point = atoi(argv[1]);
-  std::string pcd_file = "mm_n" + std::to_string(max_point) + "_reachability.pcd";
+  std::string pcd_file = "mm_n" + std::to_string(max_point) + "_rm.pcd";
   std::string pcd_filename = path + pcd_file;
 
   pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud(new pcl::PointCloud<pcl::PointNormal>);
@@ -62,21 +61,21 @@ int main(int argc, char* argv[]) {
     tf2::convert(pose, matrix);
     inverse_matrix = matrix.inverse();
 
-    std::vector<double> end_pose_vector_and_manip(6);
-    convertPoseToRPY(inverse_matrix, end_pose_vector_and_manip);
+    std::vector<double> end_pose(6);
+    convertPoseToRPY(inverse_matrix, end_pose);
 
-    pointnormal.x = end_pose_vector_and_manip[0];
-    pointnormal.y = end_pose_vector_and_manip[1];
-    pointnormal.z = end_pose_vector_and_manip[2];
-    pointnormal.normal_x = end_pose_vector_and_manip[3];
-    pointnormal.normal_y = end_pose_vector_and_manip[4];
-    pointnormal.normal_z = end_pose_vector_and_manip[5];
+    pointnormal.x = end_pose[0];
+    pointnormal.y = end_pose[1];
+    pointnormal.z = end_pose[2];
+    pointnormal.normal_x = end_pose[3];
+    pointnormal.normal_y = end_pose[4];
+    pointnormal.normal_z = end_pose[5];
     pointnormal.curvature = rm_cloud->points[i].curvature;
     irm_cloud->push_back(pointnormal);
   }
 
   ROS_INFO_STREAM("Transformation time is " << (ros::Time::now() - start_time).toSec());
-  pcd_file = "mm_n" + std::to_string(max_point) + "_inverse_reachability.pcd";
+  pcd_file = "mm_n" + std::to_string(max_point) + "_irm.pcd";
   pcd_filename = path + pcd_file;
   ROS_INFO_STREAM("Saving PCD file to " << pcd_filename);
   pcl::io::savePCDFileASCII(pcd_filename, *irm_cloud);

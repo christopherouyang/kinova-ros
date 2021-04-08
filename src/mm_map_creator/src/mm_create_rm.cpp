@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     int max_point = atoi(argv[1]);
     ROS_INFO_STREAM("Creating CM by joint space sampling and the point is: " << max_point);
     sampling.makeCMbyJointSapceSampling(rm_cloud, max_point);
-    std::string pcd_file = "mm_n" + std::to_string(rm_cloud->width) + "_reachability.pcd";
+    std::string pcd_file = "mm_n" + std::to_string(rm_cloud->width) + "_rm.pcd";
     std::string pcd_filename = path + pcd_file;
     ROS_INFO_STREAM("Saving PCD file to " << pcd_filename);
     pcl::io::savePCDFileASCII(pcd_filename, *rm_cloud);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
       pcl::PointCloud<pcl::PointNormal>::Ptr des_rm_cloud(new pcl::PointCloud<pcl::PointNormal>);
       sampling.makeCMbyCartesianSpaceSampling(rm_cloud, des_rm_cloud, trans_vector[i], rot_vector[i]);
 
-      std::string pcd_file = "mm_n" + std::to_string(rm_cloud->width) + "_reachability.pcd";
+      std::string pcd_file = "mm_n" + std::to_string(rm_cloud->width) + "_rm.pcd";
       std::string pcd_filename = path + pcd_file;
       ROS_INFO_STREAM("Saving PCD file to " << pcd_filename);
       pcl::io::savePCDFileASCII(pcd_filename, *rm_cloud);

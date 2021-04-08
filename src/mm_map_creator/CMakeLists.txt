@@ -66,17 +66,17 @@ target_link_libraries(mm_base_placement mm_motion_planner ${catkin_LIBRARIES} ${
 add_executable(mm_create_rm src/mm_create_rm.cpp)
 target_link_libraries(mm_create_rm mm_sampling ${catkin_LIBRARIES})
 
-# rm down sample
-add_executable(mm_down_sampling src/mm_down_sampling.cpp)
-target_link_libraries(mm_down_sampling mm_sampling ${catkin_LIBRARIES})
+# rm & irm down sample
+add_executable(mm_down_spl src/mm_down_spl.cpp)
+target_link_libraries(mm_down_spl mm_sampling ${catkin_LIBRARIES})
 
 # create irm
 add_executable(mm_create_irm src/mm_create_irm.cpp)
 target_link_libraries(mm_create_irm ${catkin_LIBRARIES})
 
-# rm display
-add_executable(mm_rm_display src/mm_rm_display.cpp)
-target_link_libraries(mm_rm_display ${catkin_LIBRARIES} mm_display)
+# rm & irm display
+add_executable(mm_display_node src/mm_display_node.cpp)
+target_link_libraries(mm_display_node ${catkin_LIBRARIES} mm_display)
 
 # irm display
 add_executable(mm_irm_display src/mm_irm_display.cpp)

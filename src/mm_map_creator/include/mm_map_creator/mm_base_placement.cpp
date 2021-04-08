@@ -32,7 +32,7 @@ bool mm_base_placement::load_rm(int point_number1, int point_number2) {
   ROS_INFO("des_rm_cloud has been inserted to kdtree!");
 
   // load rm_cloud
-  pcd_file = "mm_n" + std::to_string(point_number1) + "_reachability.pcd";
+  pcd_file = "mm_n" + std::to_string(point_number1) + "_rm.pcd";
   pcd_file_name = path + pcd_file;
   ROS_INFO_STREAM("Loading " << pcd_file_name);
   if (pcl::io::loadPCDFile<pcl::PointNormal>(pcd_file_name, *rm_cloud) == -1)

@@ -15,13 +15,8 @@ void mm_display::SetColorByManipulability(double manipulability, std::vector<dou
   rgb_color[2] = std::min(rgb_color[2], 255.0);
 }
 
-void mm_display::display_irm(pcl::PointCloud<pcl::PointNormal>::Ptr irm_cloud, double max_range, float new_resolution,
-                             pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display) {
-  display_rm(irm_cloud, max_range, new_resolution, rm_cloud_display);
-}
-
-void mm_display::display_rm(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, double translation_max_range,
-                            float new_resolution, pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display) {
+void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, double translation_max_range,
+                             float new_resolution, pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display) {
   bool patch = false;
   if (patch)
     new_resolution = 0.02;
