@@ -51,7 +51,7 @@
         xyz="-0.213 -0.438 -0.4745"
         rpy="1.5708 0 1.5708"/>
       <geometry>
-        <mesh filename="$(find agv_description)/meshes/WMRM.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://kinova_description/meshes/WMRM.STL" scale="0.001 0.001 0.001"/>
       </geometry>
       <material
         name="">
@@ -64,7 +64,7 @@
          xyz="0 0 -0.4"        
          rpy="0 0 0" /> 
       <geometry>
-        <mesh filename="$(find agv_description)/meshes/collision.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://kinova_description/meshes/collision.STL" scale="0.001 0.001 0.001"/>
         <!-- <box size="0.8 0.615 0.5" /> -->
       </geometry>
     </collision>

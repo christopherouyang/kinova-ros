@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display(new pcl::PointCloud<pcl::PointXYZRGB>);
   display.display_rm(rm_cloud, translation_max_range, new_resolution, rm_cloud_display);
 
-  rm_cloud_display->header.frame_id = "root";
+  rm_cloud_display->header.frame_id = "robot_root";
   ROS_INFO_STREAM("Point cloud size is: " << rm_cloud_display->width);
 
   ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("reachability_map", 1);

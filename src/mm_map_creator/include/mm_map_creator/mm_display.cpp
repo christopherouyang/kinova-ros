@@ -135,7 +135,7 @@ void mm_display::display_arrow(pcl::PointCloud<pcl::PointNormal> orm_cloud,
   marker_array.markers.clear();
   for (int i = 0; i < orm_cloud.width; i++) {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
+    marker.header.frame_id = "robot_root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
     marker.id = i;
     marker.type = visualization_msgs::Marker::ARROW;
     marker.action = visualization_msgs::Marker::ADD;

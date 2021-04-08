@@ -1,6 +1,6 @@
 <launch>
     <!--to construct hcm, moveit package for amm have to be uploaded-->
-    <include file="$(find j2s7s300_moveit_config)/launch/demo.launch" /> 
+    <include file="$(find wmrm_moveit_config)/launch/demo.launch" /> 
     <rosparam file="$(find mm_map_creator)/config/joint_names.yaml" command="load"/>
     <rosparam file="$(find mm_map_creator)/config/joint_value_limits.yaml" command="load"/>
     <rosparam file="$(find mm_map_creator)/config/default_values.yaml" command="load"/>
