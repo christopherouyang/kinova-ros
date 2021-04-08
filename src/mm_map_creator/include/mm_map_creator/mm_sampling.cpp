@@ -41,7 +41,8 @@ bool mm_sampling::rm_down_sample(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud
   int count = 0;
   for (auto begin = --rm_set.begin(), end = --rm_set.end(); end != begin; end--) {
     if (count++ == sample_number) {
-      ROS_INFO_STREAM("Number is " << count);
+      ROS_INFO_STREAM("Number is " << count - 1);
+      ROS_INFO_STREAM("The manipulability threshold is " << end->first);
       break;
     }
     pcl::PointNormal pointnormal;
@@ -253,8 +254,8 @@ bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::
 
   for (unsigned int i = 0; i < max_spl_pt; i++) {
     joint_space_sampling(joint_values);  // 更新ur和amm关节值
-    if (collision_check.isCollision(joint_values))
-      continue;  // 舍弃碰撞的点
+    // if (collision_check.isCollision(joint_values))
+    //   continue;  // 舍弃碰撞的点
 
     end_pose_matrix = kinematics.GetTotalHomoMatrix(joint_values);  // eef相对于agv_base_link的齐次变换矩阵
     convertPoseToPoseVector(end_pose_matrix, end_pose_vector);

@@ -16,7 +16,7 @@ Eigen::Affine3d mm_kinematics::Dh2HomeMatrix(const std::vector<double> dh) {
   transform_matrix(1, 0) = sin(dh[3]);
   transform_matrix(1, 1) = cos(dh[3]) * cos(dh[0]);
   transform_matrix(1, 2) = -cos(dh[3]) * sin(dh[0]);
-  transform_matrix(1, 3) = sin(dh[3]) * dh[1];
+  transform_matrix(1, 3) = dh[1] * sin(dh[3]);
 
   transform_matrix(2, 0) = 0;
   transform_matrix(2, 1) = sin(dh[0]);
@@ -108,7 +108,7 @@ Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix(
 
 double mm_kinematics::GetManipulability(const std::vector<double> joint_values) {
   Eigen::Matrix<double, 6, JOINT_NUMBER> jacobian_matrix = GetTotalJacobianMatrix(joint_values);
-  double manipulability = sqrt((jacobian_matrix * jacobian_matrix.transpose()).determinant()) * 100 / 0.083738;
+  double manipulability = sqrt((jacobian_matrix * jacobian_matrix.transpose()).determinant()) * 100 / 0.056102;
   return manipulability;
 }
 
@@ -124,7 +124,7 @@ void mm_kinematics::set_dh_param() {
   dh_param[3] = {PI / 2, 0, -0.0098, 0};
   dh_param[4] = {PI / 2, 0, -0.3111, 0};
   dh_param[5] = {PI / 2, 0, 0, 0};
-  dh_param[6] = {PI / 2, 0, -0.2638, 0};
+  dh_param[6] = {PI, 0, -0.2638, 0};
 }
 
 void mm_kinematics::Convert2DhParam(const std::vector<double> joint_values) {

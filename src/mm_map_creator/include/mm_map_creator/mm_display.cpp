@@ -5,17 +5,14 @@ mm_display::mm_display() {
 }
 
 void mm_display::SetColorByManipulability(double manipulability, std::vector<double>& rgb_color) {
-  // std::vector<double> color_vector = {80, 65, 50};
-  std::vector<double> color_vector = {75, 50, 25};
-  if (manipulability >= color_vector[0]) {
-    rgb_color = {0, 0, 255};  // 蓝色
-  } else if (manipulability < color_vector[0] && manipulability >= color_vector[1]) {
-    rgb_color = {0, 255, 255};  // 青色
-  } else if (manipulability < color_vector[1] && manipulability >= color_vector[2]) {
-    rgb_color = {0, 255, 0};  // 绿色
-  } else {
-    rgb_color = {255, 0, 0};  // 红色
-  }
+  rgb_color[0] = std::max((fabs(manipulability - 60) - 20) / 20 * 255, 0.0);
+  rgb_color[0] = std::min(rgb_color[0], 255.0);
+
+  rgb_color[1] = std::max(255 - (fabs(manipulability - 40) - 20) / 20 * 255, 0.0);
+  rgb_color[1] = std::min(rgb_color[1], 255.0);
+
+  rgb_color[2] = std::max((manipulability - 40) / 20 * 255, 0.0);
+  rgb_color[2] = std::min(rgb_color[2], 255.0);
 }
 
 void mm_display::display_irm(pcl::PointCloud<pcl::PointNormal>::Ptr irm_cloud, double max_range, float new_resolution,
@@ -135,7 +132,8 @@ void mm_display::display_arrow(pcl::PointCloud<pcl::PointNormal> orm_cloud,
   marker_array.markers.clear();
   for (int i = 0; i < orm_cloud.width; i++) {
     visualization_msgs::Marker marker;
-    marker.header.frame_id = "robot_root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
+    marker.header.frame_id =
+        "robot_root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
     marker.id = i;
     marker.type = visualization_msgs::Marker::ARROW;
     marker.action = visualization_msgs::Marker::ADD;

@@ -18,13 +18,13 @@ int main(int argc, char *argv[]) {
   pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud(new pcl::PointCloud<pcl::PointNormal>);
   if (pcl::io::loadPCDFile<pcl::PointNormal>(pcd_filename, *rm_cloud) == -1) {
     ROS_ERROR("Can't load Reachability Map PCD file");
-    return (-1);
+    return -1;
   }
   ROS_INFO("Loaded PCD file successfully!");
   ROS_INFO_STREAM("Point number is " << rm_cloud->width);
 
   double translation_max_range = 4.5;
-  double new_resolution = 0.1f;
+  double new_resolution = 0.08f;
 
   mm_display::mm_display display;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display(new pcl::PointCloud<pcl::PointXYZRGB>);
