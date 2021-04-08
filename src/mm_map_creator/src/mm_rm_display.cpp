@@ -23,14 +23,14 @@ int main(int argc, char *argv[]) {
   ROS_INFO("Loaded PCD file successfully!");
   ROS_INFO_STREAM("Point number is " << rm_cloud->width);
 
-  double translation_max_range = 2.5;
+  double translation_max_range = 4.5;
   double new_resolution = 0.1f;
 
   mm_display::mm_display display;
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display(new pcl::PointCloud<pcl::PointXYZRGB>);
   display.display_rm(rm_cloud, translation_max_range, new_resolution, rm_cloud_display);
 
-  rm_cloud_display->header.frame_id = "agv_base_link";
+  rm_cloud_display->header.frame_id = "root";
   ROS_INFO_STREAM("Point cloud size is: " << rm_cloud_display->width);
 
   ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("reachability_map", 1);

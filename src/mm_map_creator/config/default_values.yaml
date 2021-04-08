@@ -1,5 +1,4 @@
 default_values:
-  ur5_support_height: 0.01
   tool_offset: 0.23
   agv_gain_real: 5.0
   ur_gain_real: 5.0

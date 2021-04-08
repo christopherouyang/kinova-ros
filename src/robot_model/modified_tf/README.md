@@ -1,6 +1,0 @@
-20210315
-1. ur_modern_driver中，ur机器人发布出来的话题改成了/ur_joint_states，注意修改了源代码；
-2. real_mm_joint_state_publisher接收/odom和/ur_joint_states并发布到/joint_states上去，同时robot_state_publisher和move_group都接收/joint_states数据；
-3. ur_joint_state_convert接收/ur_joint_states的数据，转换成joint_states，在ur单独打开的时候使用，比如参数辨识等；
-4. ur5_agv_tf_modified只是对坐标系做一些改动，符合DH规范，实际使用时，不需要打开；
-5. robot_model_synchronize_with_moveit的作用是moveit规划机器人的运动并执行时，将该运动施加到位置控制的机器人模型上，使得两者同步，基本上不需要使用，因为目前都是通过位置或者速度控制来更新机器人，同时moveit会接收joint_states数据，自动更新自己管理的机器人模型

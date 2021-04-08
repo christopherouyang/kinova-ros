@@ -76,3 +76,4 @@ kvh_driver/src/kvh_driver/
 
 # pointcloud
 *.pcd
+*.csv

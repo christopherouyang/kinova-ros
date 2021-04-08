@@ -1,5 +1,0 @@
-1. loopback_controller会发布urdf中的所有关节，并发布到 joint_states，同时需要注意该节点需要与下面的几个节点在同一个命名空间中，不然部分话题传递失败，导致控制失败
-2. amm_state_separator会根据yaml中的信息将需要的关节信息过滤出去，并发布到 pos_controller/joint_states
-3. robot_state_publisher接收 pos_controller/joint_states，并更新机器人模型
-4. pos_controller接收 pos_controller/joint_states，并发送速度到 vel/command
-5. launch文件夹下面的pos_vel_controller需要和config文件夹下面的yaml文件配套，其中yaml文件包含控制单元的关节名称

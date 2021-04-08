@@ -5,6 +5,9 @@ ur5_joint_limits:
     shoulder_lift_joint:
       upper_limits: 3.1415926
       lower_limits: -3.1415926
+    shoulder_tilt_joint:
+      upper_limits: 3.1415926
+      lower_limits: -3.1415926
     elbow_joint:
       upper_limits: 3.1415926
       lower_limits: -3.1415926

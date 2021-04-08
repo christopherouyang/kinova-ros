@@ -2,7 +2,7 @@
 
 namespace mm_kinematics {
 mm_kinematics::mm_kinematics() {
-  set_dh_param(dh_param);
+  set_dh_param();
 }
 
 Eigen::Affine3d mm_kinematics::Dh2HomeMatrix(const std::vector<double> dh) {
@@ -31,7 +31,7 @@ Eigen::Affine3d mm_kinematics::Dh2HomeMatrix(const std::vector<double> dh) {
   return transform_matrix;
 }
 
-Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const std::vector<std::vector<double> > dh_param) {
+Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix() {
   Eigen::Affine3d temp_matrix = Eigen::Affine3d::Identity();
   for (int i = 0; i < JOINT_NUMBER; i++) {
     temp_matrix = temp_matrix * Dh2HomeMatrix(dh_param[i]);
@@ -40,17 +40,16 @@ Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const std::vector<std::vector<
 }
 
 Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const std::vector<double> joint_values) {
-  Convert2DhParam(joint_values, dh_param);
-  return GetTotalHomoMatrix(dh_param);
+  Convert2DhParam(joint_values);
+  return GetTotalHomoMatrix();
 }
 
 Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values) {
-  Convert2DhParam(joint_values, dh_param);
-  return GetTotalHomoMatrix(dh_param);
+  Convert2DhParam(joint_values);
+  return GetTotalHomoMatrix();
 }
 
-Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix(
-    const std::vector<std::vector<double> > dh_param) {
+Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix() {
   std::vector<Eigen::Affine3d> frame_matrix(JOINT_NUMBER);
   Eigen::Affine3d temp_matrix = Eigen::Affine3d::Identity();
   for (int i = 0; i < JOINT_NUMBER; i++) {
@@ -97,29 +96,29 @@ Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix(
 }
 
 Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix(const std::vector<double> joint_values) {
-  Convert2DhParam(joint_values, dh_param);
-  return GetTotalJacobianMatrix(dh_param);
+  Convert2DhParam(joint_values);
+  return GetTotalJacobianMatrix();
 }
 
 Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix(
     const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values) {
-  Convert2DhParam(joint_values, dh_param);
-  return GetTotalJacobianMatrix(dh_param);
+  Convert2DhParam(joint_values);
+  return GetTotalJacobianMatrix();
 }
 
 double mm_kinematics::GetManipulability(const std::vector<double> joint_values) {
   Eigen::Matrix<double, 6, JOINT_NUMBER> jacobian_matrix = GetTotalJacobianMatrix(joint_values);
-  double manipulability = sqrt((jacobian_matrix * jacobian_matrix.transpose()).determinant());
-  return 100 * manipulability / 2.23345;
+  double manipulability = sqrt((jacobian_matrix * jacobian_matrix.transpose()).determinant()) * 100 / 0.083738;
+  return manipulability;
 }
 
-void mm_kinematics::set_dh_param(std::vector<std::vector<double> >& dh_param) {
+void mm_kinematics::set_dh_param() {
   dh_param.resize(JOINT_NUMBER);
   for (int i = 0; i < JOINT_NUMBER; i++) {
     dh_param[i].resize(4);
   }
   // 顺序是alpha, a, d, theta
-  dh_param[0] = {PI / 2, -0.85, 0.2755, 0};
+  dh_param[0] = {PI / 2, 0, 0.2755, 0};
   dh_param[1] = {PI / 2, 0, 0, 0};
   dh_param[2] = {PI / 2, 0, -0.41, 0};
   dh_param[3] = {PI / 2, 0, -0.0098, 0};
@@ -128,19 +127,17 @@ void mm_kinematics::set_dh_param(std::vector<std::vector<double> >& dh_param) {
   dh_param[6] = {PI / 2, 0, -0.2638, 0};
 }
 
-void mm_kinematics::Convert2DhParam(const std::vector<double> joint_values,
-                                    std::vector<std::vector<double> >& dh_param) {
+void mm_kinematics::Convert2DhParam(const std::vector<double> joint_values) {
   for (int i = 0; i < JOINT_NUMBER; i++) {
     dh_param[i][3] = joint_values[i];
   }
 }
 
-void mm_kinematics::Convert2DhParam(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values,
-                                    std::vector<std::vector<double> >& dh_param) {
+void mm_kinematics::Convert2DhParam(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values) {
   std::vector<double> joint_values_vector(JOINT_NUMBER);
   for (int i = 0; i < JOINT_NUMBER; i++) {
     joint_values_vector[i] = joint_values(i);
   }
-  Convert2DhParam(joint_values_vector, dh_param);
+  Convert2DhParam(joint_values_vector);
 }
 }  // namespace mm_kinematics

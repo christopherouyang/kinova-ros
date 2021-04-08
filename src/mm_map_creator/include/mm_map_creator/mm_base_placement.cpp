@@ -151,7 +151,7 @@ bool mm_base_placement::get_orm_patch(std::vector<double> eef_pose_vector, std::
   pitch_filter(eef_pose_vector[4], rm_cloud_patch, rm_cloud_patch);
   // 4. calculating base_pose_cloud from rm_cloud_patch
   // 加并行运算
-  omp_set_num_threads(4);
+  // omp_set_num_threads(4);
 #pragma omp parallel for
   for (int i = 0; i < rm_cloud_patch->width; i++) {
     getAGVPosePointFromBasePosePoint(target_pose_matrix, rm_cloud_patch->points[i]);

@@ -44,28 +44,6 @@ int main(int argc, char *argv[]) {
       ROS_INFO_STREAM("Saving PCD file to " << pcd_filename);
       pcl::io::savePCDFileASCII(pcd_filename, *des_rm_cloud);
     }
-
-    // ROS_INFO("Creating CM by cartesian space sampling!");
-    // ROS_INFO("Point number is specified by the default parameters!");
-    // pcl::PointCloud< pcl::PointNormal >::Ptr rm_cloud(new pcl::PointCloud< pcl::PointNormal >);
-    // pcl::PointCloud< pcl::PointNormal >::Ptr des_rm_cloud(new pcl::PointCloud< pcl::PointNormal >);
-    // double cm_translation_resolution, cm_orientation_resolution;
-    // ros::param::get("default_values/cm_translation_resolution",cm_translation_resolution);
-    // ros::param::get("default_values/cm_orientation_resolution",cm_orientation_resolution);
-    // ROS_INFO_STREAM("Trans and orient resolution is:
-    // "<<cm_translation_resolution<<setw(15)<<cm_orientation_resolution);
-    // sampling.makeCMbyCartesianSpaceSampling(rm_cloud, des_rm_cloud, cm_translation_resolution,
-    // cm_orientation_resolution);
-
-    // std::string pcd_file = str(boost::format("mm_n%1%_reachability.pcd") % rm_cloud->width);
-    // std::string pcd_filename = path + pcd_file;
-    // ROS_INFO_STREAM("Saving PCD file to "<<pcd_filename);
-    // pcl::io::savePCDFileASCII (pcd_filename, *rm_cloud);
-
-    // pcd_file = str(boost::format("mm_n%1%_des.pcd") % des_rm_cloud->width);
-    // pcd_filename = path + pcd_file;
-    // ROS_INFO_STREAM("Saving PCD file to "<<pcd_filename);
-    // pcl::io::savePCDFileASCII (pcd_filename, *des_rm_cloud);
   }
   return 0;
 }

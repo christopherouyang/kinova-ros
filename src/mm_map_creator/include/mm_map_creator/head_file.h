@@ -54,8 +54,8 @@
 // service file
 #include "mm_map_creator/orm_calculation.h"
 
-// parallel calculation
-#include "omp.h"
+// // parallel calculation
+// #include "omp.h"
 
 using std::cout;
 using std::endl;
@@ -63,7 +63,7 @@ using std::setw;
 using std::string;
 
 constexpr int JOINT_NUMBER = 7;
-constexpr int UR_JOINT_NUMBER = 7;
+constexpr int ARM_JOINT_NUM = 7;
 constexpr int AGV_JOINT_NUMBER = 0;
 constexpr double PI = 3.1415926536;
 
