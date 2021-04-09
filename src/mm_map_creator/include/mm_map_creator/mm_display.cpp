@@ -15,40 +15,14 @@ void mm_display::SetColorByManipulability(double manipulability, std::vector<dou
   rgb_color[2] = std::min(rgb_color[2], 255.0);
 }
 
-void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, double translation_max_range,
-                             float new_resolution, pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display) {
-  bool patch = false;
-  if (patch)
-    new_resolution = 0.02;
+void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, double trans_rng, float res,
+                             pcl::PointCloud<pcl::PointXYZRGB>::Ptr rm_cloud_display) {
   unsigned char max_depth = 32;
   octomap::point3d origin = octomap::point3d(0, 0, 0);
-  octomap::OcTree* translation_tree = md.generateBoxTree(origin, translation_max_range, new_resolution);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr translation_cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
-  for (octomap::OcTree::leaf_iterator it = translation_tree->begin_leafs(max_depth),
-                                      end = translation_tree->end_leafs();
-       it != end; ++it) {
-    pcl::PointXYZ point;
-    point.x = it.getCoordinate()(0);
-    point.y = it.getCoordinate()(1);
-    point.z = it.getCoordinate()(2);
-    translation_cloud_filtered->push_back(point);
-  }
-  if (patch) {
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    kdtree.setInputCloud(translation_cloud_filtered);
-    pcl::PointXYZ searchPoint;
-    searchPoint.x = 0.868;
-    searchPoint.y = 0.109;
-    searchPoint.z = 1.005;
-    std::vector<int> point_id;
-    std::vector<float> point_distance;
-    kdtree.radiusSearch(searchPoint, 0.15, point_id, point_distance);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_patch(new pcl::PointCloud<pcl::PointXYZ>);
-    for (size_t i = 0; i < point_id.size(); i++) {
-      cloud_patch->push_back(translation_cloud_filtered->points[point_id[i]]);
-    }
-    translation_cloud_filtered->clear();
-    *translation_cloud_filtered = *cloud_patch;
+  octomap::OcTree* translation_tree = md.generateBoxTree(origin, trans_rng, res);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr filter_trans_pcl(new pcl::PointCloud<pcl::PointXYZ>);
+  for (auto ite = translation_tree->begin_leafs(max_depth); ite != translation_tree->end_leafs(); ++ite) {
+    filter_trans_pcl->push_back(pcl::PointXYZ(ite.getCoordinate()(0), ite.getCoordinate()(1), ite.getCoordinate()(2)));
   }
 
   std::multimap<const std::vector<double>, double> multi_voxel_color;
@@ -56,8 +30,8 @@ void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, do
   int K = 1;
   std::vector<int> translation_point_idx_vec(K);
   std::vector<float> k_near_trans_distance(K);
-  pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> translation_octree(new_resolution);
-  translation_octree.setInputCloud(translation_cloud_filtered);
+  pcl::octree::OctreePointCloudSearch<pcl::PointXYZ> translation_octree(res);
+  translation_octree.setInputCloud(filter_trans_pcl);
   translation_octree.addPointsFromInputCloud();
 
   int count = 0;
@@ -72,18 +46,18 @@ void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, do
     translation_search_point.z = rm_cloud->points[i].z;
     manipulability = rm_cloud->points[i].curvature;
     translation_octree.nearestKSearch(translation_search_point, K, translation_point_idx_vec, k_near_trans_distance);
-    center_point[0] = translation_cloud_filtered->points[translation_point_idx_vec[0]].x;
-    center_point[1] = translation_cloud_filtered->points[translation_point_idx_vec[0]].y;
-    center_point[2] = translation_cloud_filtered->points[translation_point_idx_vec[0]].z;
+    center_point[0] = filter_trans_pcl->points[translation_point_idx_vec[0]].x;
+    center_point[1] = filter_trans_pcl->points[translation_point_idx_vec[0]].y;
+    center_point[2] = filter_trans_pcl->points[translation_point_idx_vec[0]].z;
     multi_voxel_color.insert(std::make_pair(center_point, manipulability));
   }
 
   std::multiset<std::pair<double, std::vector<double> > > rm_set;
-  for (int i = 0; i < translation_cloud_filtered->size(); i++) {
+  for (int i = 0; i < filter_trans_pcl->size(); i++) {
     std::vector<double> center_point(3);
-    center_point[0] = translation_cloud_filtered->points[i].x;
-    center_point[1] = translation_cloud_filtered->points[i].y;
-    center_point[2] = translation_cloud_filtered->points[i].z;
+    center_point[0] = filter_trans_pcl->points[i].x;
+    center_point[1] = filter_trans_pcl->points[i].y;
+    center_point[2] = filter_trans_pcl->points[i].z;
 
     int voxel_number = multi_voxel_color.count(center_point);
     if (voxel_number > 0) {
@@ -93,9 +67,9 @@ void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, do
            ++it) {
         color[count++] = it->second;
       }
-      // double manip = * std::max_element(std::begin(color), std::end(color));
+      double manip = *std::max_element(std::begin(color), std::end(color));
       // double manip = * std::min_element(std::begin(color), std::end(color));
-      double manip = std::accumulate(std::begin(color), std::end(color), 0.0) / color.size();
+      // double manip = std::accumulate(std::begin(color), std::end(color), 0.0) / color.size();
       rm_set.insert(make_pair(manip, center_point));
     }
   }
@@ -127,8 +101,7 @@ void mm_display::display_arrow(pcl::PointCloud<pcl::PointNormal> orm_cloud,
   marker_array.markers.clear();
   for (int i = 0; i < orm_cloud.width; i++) {
     visualization_msgs::Marker marker;
-    marker.header.frame_id =
-        "robot_root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
+    marker.header.frame_id = "root";  //这个和rm不一样，rm的基坐标系是agv_base_link，但是小车的位姿是的基础坐标系是odom
     marker.id = i;
     marker.type = visualization_msgs::Marker::ARROW;
     marker.action = visualization_msgs::Marker::ADD;

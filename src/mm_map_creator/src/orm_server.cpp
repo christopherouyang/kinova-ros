@@ -1,12 +1,13 @@
+// rosrun mm_map_creator orm_server 1000000
+
 #include "mm_map_creator/mm_base_placement.h"
-#include "mm_map_creator/mm_display.h"
 
 int request_count = 0;
 
 class orm_server {
  public:
-  orm_server(int cm_number, int des_number) {
-    mbp.load_rm(cm_number, des_number);
+  orm_server(int cm_number) {
+    mbp.load_rm(cm_number);
     orm_calculation_service = nh.advertiseService("orm_calculation", &orm_server::ormCalculation, this);
   }
 
@@ -22,24 +23,7 @@ int main(int argc, char* argv[]) {
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  // std::vector<int> cm_number_vector = {35438, 69055, 258656, 777335, 3998335, 43606025};
-  // std::vector<int> des_number_vector = {552, 834, 1482, 2855, 6679, 22583};
-  // std::vector<double> cm_resolution_vector = {7,6,5,4,3,2};
-  // for(int i = 0; i < cm_resolution_vector.size(); i ++)
-  // {
-  //     ROS_INFO_STREAM("resolution: "<<cm_resolution_vector[i]);
-  //     ros::param::set("default_values/cm_translation_resolution", cm_resolution_vector[i]);
-  //     ros::param::set("default_values/cm_orientation_resolution", cm_resolution_vector[i]);
-  //     orm_server os(cm_number_vector[i], des_number_vector[i]);
-  //     while(ros::ok())
-  //     {
-  //         if(request_count == 2*30) {request_count = 0; break;}
-  //     }
-  // }
-
-  int cm_number = 43606025;
-  int des_number = 22583;
-  orm_server os(cm_number, des_number);
+  orm_server os(atoi(argv[1]));
   ROS_INFO("Waiting for orm calculation");
   ros::waitForShutdown();
   return 0;
@@ -48,18 +32,21 @@ int main(int argc, char* argv[]) {
 bool orm_server::ormCalculation(mm_map_creator::orm_calculation::Request& req,
                                 mm_map_creator::orm_calculation::Response& res) {
   pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud(new pcl::PointCloud<pcl::PointNormal>);
-  if (req.target_eef_pose_vector.size() != 6) {
+  std::vector<double> eef_pose = req.target_eef_pose_vector;
+  if (eef_pose.size() != 6) {
     ROS_ERROR("The format of target pose is wrong!");
     return false;
   }
+  ROS_INFO("The EEF pose is (%f, %f, %f, %f, %f, %f)", eef_pose[0], eef_pose[1], eef_pose[2], eef_pose[3], eef_pose[4],
+           eef_pose[5]);
   if (req.method == 0) {
     if (req.current_agv_pose.size() != 3) {
       ROS_ERROR("The format of agv pose is wrong!");
       return false;
     }
-    mbp.get_orm_patch(req.target_eef_pose_vector, req.current_agv_pose, base_pose_cloud);
+    mbp.get_orm_patch(eef_pose, req.current_agv_pose, base_pose_cloud);
   } else {
-    mbp.get_orm(req.target_eef_pose_vector, base_pose_cloud, req.method);
+    mbp.get_orm(eef_pose, base_pose_cloud, req.method);
   }
 
   ROS_INFO_STREAM("Point size: " << base_pose_cloud->points.size());

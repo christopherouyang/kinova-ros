@@ -32,7 +32,6 @@ class mm_sampling {
   double mm_rand(double dmin, double dmax, int times);                           // 单个数值随机采样
   void GetAllRPYFromPoseMatrix(Eigen::Affine3d pose_matrix, std::vector<double>& rpy_angle);
   bool isPoseinROI(Eigen::Affine3d end_pose, std::vector<double>& end_pose_vector);
-  void convertPoseToPoseVector(const Eigen::Affine3d pose, std::vector<double>& end_pose_vector);
 };
 }  // namespace mm_sampling
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mm_map_creator)
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 find_package(catkin REQUIRED COMPONENTS visualization_msgs roscpp message_generation geometry_msgs std_msgs tf2 rviz_visual_tools pcl_ros moveit_core moveit_msgs moveit_ros_planning_interface)
 find_package(octomap REQUIRED)
 
@@ -81,3 +81,11 @@ target_link_libraries(mm_display_node ${catkin_LIBRARIES} mm_display)
 # irm display
 add_executable(mm_irm_display src/mm_irm_display.cpp)
 target_link_libraries(mm_irm_display ${catkin_LIBRARIES} mm_display)
+
+# orm display
+add_executable(orm_display src/orm_display.cpp)
+target_link_libraries(orm_display ${catkin_LIBRARIES} mm_display mm_kinematics)
+
+# orm server
+add_executable(orm_server src/orm_server.cpp)
+target_link_libraries(orm_server ${catkin_LIBRARIES} mm_base_placement)

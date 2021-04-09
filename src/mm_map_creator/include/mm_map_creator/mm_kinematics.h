@@ -9,6 +9,8 @@ class mm_kinematics {
   mm_kinematics();
   Eigen::Affine3d GetTotalHomoMatrix(const std::vector<double> joint_values);
   Eigen::Affine3d GetTotalHomoMatrix(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values);
+  std::vector<double> GetTotalEndPose(const std::vector<double> joint_values);
+  std::vector<double> GetTotalEndPose(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values);
   Eigen::Matrix<double, 6, JOINT_NUMBER> GetTotalJacobianMatrix(const std::vector<double> joint_values);
   Eigen::Matrix<double, 6, JOINT_NUMBER> GetTotalJacobianMatrix(
       const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values);

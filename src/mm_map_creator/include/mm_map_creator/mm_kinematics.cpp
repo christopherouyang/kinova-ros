@@ -5,6 +5,14 @@ mm_kinematics::mm_kinematics() {
   set_dh_param();
 }
 
+static std::vector<double> convertPoseToPoseVector(const Eigen::Affine3d pose) {
+  Eigen::Matrix3d rotation_matrix;
+  rotation_matrix << pose(0, 0), pose(0, 1), pose(0, 2), pose(1, 0), pose(1, 1), pose(1, 2), pose(2, 0), pose(2, 1),
+      pose(2, 2);
+  Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);
+  return std::vector<double>{pose(0, 3), pose(1, 3), pose(2, 3), euler_angles(2), euler_angles(1), euler_angles(0)};
+}
+
 Eigen::Affine3d mm_kinematics::Dh2HomeMatrix(const std::vector<double> dh) {
   // 对于已经存在的元素可以使用下标对其进行访问
   Eigen::Affine3d transform_matrix = Eigen::Affine3d::Identity();
@@ -33,6 +41,11 @@ Eigen::Affine3d mm_kinematics::Dh2HomeMatrix(const std::vector<double> dh) {
 
 Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix() {
   Eigen::Affine3d temp_matrix = Eigen::Affine3d::Identity();
+  temp_matrix(0, 0) = 0;
+  temp_matrix(0, 1) = 1;
+  temp_matrix(1, 0) = 1;
+  temp_matrix(1, 1) = 0;
+  temp_matrix(2, 2) = -1;
   for (int i = 0; i < JOINT_NUMBER; i++) {
     temp_matrix = temp_matrix * Dh2HomeMatrix(dh_param[i]);
   }
@@ -47,6 +60,14 @@ Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const std::vector<double> join
 Eigen::Affine3d mm_kinematics::GetTotalHomoMatrix(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values) {
   Convert2DhParam(joint_values);
   return GetTotalHomoMatrix();
+}
+
+std::vector<double> mm_kinematics::GetTotalEndPose(const std::vector<double> joint_values) {
+  return convertPoseToPoseVector(GetTotalHomoMatrix(joint_values));
+}
+
+std::vector<double> mm_kinematics::GetTotalEndPose(const Eigen::Matrix<double, JOINT_NUMBER, 1> joint_values) {
+  return convertPoseToPoseVector(GetTotalHomoMatrix(joint_values));
 }
 
 Eigen::Matrix<double, 6, JOINT_NUMBER> mm_kinematics::GetTotalJacobianMatrix() {
@@ -118,13 +139,13 @@ void mm_kinematics::set_dh_param() {
     dh_param[i].resize(4);
   }
   // 顺序是alpha, a, d, theta
-  dh_param[0] = {PI / 2, 0, 0.2755, 0};
+  dh_param[0] = {PI / 2, 0, -0.2755, 0};
   dh_param[1] = {PI / 2, 0, 0, 0};
   dh_param[2] = {PI / 2, 0, -0.41, 0};
   dh_param[3] = {PI / 2, 0, -0.0098, 0};
   dh_param[4] = {PI / 2, 0, -0.3111, 0};
   dh_param[5] = {PI / 2, 0, 0, 0};
-  dh_param[6] = {PI, 0, -0.2638, 0};
+  dh_param[6] = {PI, 0, -0.1638, 0};
 }
 
 void mm_kinematics::Convert2DhParam(const std::vector<double> joint_values) {

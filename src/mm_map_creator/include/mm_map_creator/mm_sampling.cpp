@@ -242,9 +242,8 @@ void mm_sampling::GetAllRPYFromPoseMatrix(Eigen::Affine3d pose_matrix, std::vect
 /****************************************joint space sampling****************************************/
 // 目前关节生成的点云仅仅用来做可视化
 bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, int max_spl_pt) {
-  std::vector<double> joint_values(6, 0);
-  std::vector<double> end_pose_vector(6, 0);  // 存储末端位姿
-  Eigen::Affine3d end_pose_matrix;            // 以矩阵的形式存储末端位姿
+  std::vector<double> joint_values(JOINT_NUMBER, 0);
+  std::vector<double> end_pose_vector(6, 0);  // 末端位姿(x, y, z, r, p, y)
   double manip{-1.0}, max_mainp{-1.0};
 
   int percent_before = 0;
@@ -257,8 +256,7 @@ bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::
     // if (collision_check.isCollision(joint_values))
     //   continue;  // 舍弃碰撞的点
 
-    end_pose_matrix = kinematics.GetTotalHomoMatrix(joint_values);  // eef相对于agv_base_link的齐次变换矩阵
-    convertPoseToPoseVector(end_pose_matrix, end_pose_vector);
+    end_pose_vector = kinematics.GetTotalEndPose(joint_values);
     manip = kinematics.GetManipulability(joint_values);
 
     int percent = double(i) / max_spl_pt * 100;
@@ -284,20 +282,6 @@ bool mm_sampling::makeCMbyJointSapceSampling(pcl::PointCloud<pcl::PointNormal>::
   ROS_INFO_STREAM("Max manipulability is: " << max_mainp);
   ROS_INFO("Reachability map completed!!!");
   return true;
-}
-
-void mm_sampling::convertPoseToPoseVector(const Eigen::Affine3d pose, std::vector<double>& end_pose_vector) {
-  Eigen::Matrix3d rotation_matrix;
-  rotation_matrix << pose(0, 0), pose(0, 1), pose(0, 2), pose(1, 0), pose(1, 1), pose(1, 2), pose(2, 0), pose(2, 1),
-      pose(2, 2);
-  Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);
-  end_pose_vector[0] = pose(0, 3);
-  end_pose_vector[1] = pose(1, 3);
-  end_pose_vector[2] = pose(2, 3);
-  end_pose_vector[3] = euler_angles(2);  // roll
-  end_pose_vector[4] = euler_angles(1);  // pitch
-  end_pose_vector[5] = euler_angles(0);  // yaw
-                                         // 注意rpy的顺序
 }
 
 int mm_sampling::load_joint_names(std::vector<std::string>& joint_names) {
