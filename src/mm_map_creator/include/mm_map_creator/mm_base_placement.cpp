@@ -4,8 +4,6 @@ namespace mm_base_placement {
 mm_base_placement::mm_base_placement()
     : rm_cloud(new pcl::PointCloud<pcl::PointNormal>), des_rm_cloud(new pcl::PointCloud<pcl::PointNormal>) {
   ros::param::get("default_values/agv_movement_delta", agv_movement_delta);
-  ros::param::get("default_values/filter_translation_resolution", trans_res);
-  ros::param::get("default_values/filter_orientation_resolution", ori_res);
 }
 
 bool mm_base_placement::load_rm(int point_number1) {
@@ -24,8 +22,10 @@ bool mm_base_placement::load_rm(int point_number1) {
 }
 
 /******************************机器人基座放置相关函数******************************/
-void mm_base_placement::get_orm(std::vector<double> eef_pose_vector,
+void mm_base_placement::get_orm(std::vector<double> eef_pose_vector, std::vector<double> filter_res,
                                 pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud, int method) {
+  trans_res = filter_res[0];
+  ori_res = filter_res[1];
   ros::Time start_time = ros::Time::now();
   Eigen::Affine3d target_pose_matrix = mmp.getPoseMatrixFromPoseVector(eef_pose_vector);
   if (method == 1) {
@@ -79,8 +79,11 @@ void mm_base_placement::get_orm(std::vector<double> eef_pose_vector,
   }
 }
 
-void mm_base_placement::get_orm_patch(std::vector<double> eef_pose_vector, std::vector<double> current_agv_pose,
+void mm_base_placement::get_orm_patch(std::vector<double> eef_pose_vector, std::vector<double> filter_res,
+                                      std::vector<double> current_agv_pose,
                                       pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud) {
+  trans_res = filter_res[0];
+  ori_res = filter_res[1];
   ros::Time start_time = ros::Time::now();
   // 0. 近邻搜索的时候，需要将eef_pose_vector转换到移动机器人坐标系下面
   std::vector<double> agv_pose_vector = {current_agv_pose[0], current_agv_pose[1], 0, 0, 0, current_agv_pose[2]};
@@ -198,7 +201,7 @@ void mm_base_placement::pitch_filter(double angle, pcl::PointCloud<pcl::PointNor
 
 void mm_base_placement::z_filter(double z, pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,
                                  pcl::PointCloud<pcl::PointNormal>::Ptr target_cloud) {
-  pcl_filter(z - ori_res, z + ori_res, "z", source_cloud, target_cloud);
+  pcl_filter(z - trans_res, z + trans_res, "z", source_cloud, target_cloud);
 }
 
 void mm_base_placement::roll_filter2(double angle, pcl::PointCloud<pcl::PointNormal>::Ptr source_cloud,

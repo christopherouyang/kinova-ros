@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="mm_map_creator" name="orm_display" type="orm_display" /> 
+    
+    <rosparam file="$(find mm_map_creator)/config/default_values.yaml" command="load"/>
+</launch>

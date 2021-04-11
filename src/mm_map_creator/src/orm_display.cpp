@@ -1,4 +1,5 @@
 // 这个程序是使用改进之后的方法进行计算基座的位置，并进行数据显示，计算速度快
+// rosrun mm_map_creator orm_display 0.04 0.04
 #include "mm_map_creator/head_file.h"
 #include "mm_map_creator/mm_display.h"
 #include "mm_map_creator/mm_kinematics.h"
@@ -21,12 +22,17 @@ int main(int argc, char *argv[]) {
   ros::ServiceClient orm_calculation_client = nh.serviceClient<mm_map_creator::orm_calculation>("orm_calculation");
   mm_kinematics::mm_kinematics kine;
   mm_map_creator::orm_calculation orm_cal;
+  std::vector<double> filter_res(2, 0.05);
+  filter_res[0] = atof(argv[1]);
+  filter_res[1] = atof(argv[2]);
+  ROS_INFO("filter resolution, translation: %f, rotation: %f", filter_res[0], filter_res[1]);
 
   ros::Subscriber joint_state_sub = nh.subscribe("/joint_states", 50, joint_state_callback);
   ros::Duration(1.0).sleep();
   ros::spinOnce();
 
   orm_cal.request.method = 1;
+  orm_cal.request.filter_res = filter_res;
   orm_cal.request.current_agv_pose = std::vector<double>(3, 0.0);
   orm_cal.request.target_eef_pose_vector = kine.GetTotalEndPose(kinova_joint_state);
 

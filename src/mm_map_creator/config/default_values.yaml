@@ -4,7 +4,7 @@ default_values:
   ur_gain_real: 5.0
   agv_gain_sim: 6.0
   ur_gain_sim: 6.0
-  filter_translation_resolution: 0.1  # m
-  filter_orientation_resolution: 0.2  # rad
-  agv_movement_delta: 0.05      # m
-  min_distance_to_obs: 0.2      # m
+  filter_translation_resolution: 0.04  # m
+  filter_orientation_resolution: 0.08  # rad
+  agv_movement_delta: 0.1      # m
+  min_distance_to_obs: 0.1      # m

@@ -44,9 +44,9 @@ bool orm_server::ormCalculation(mm_map_creator::orm_calculation::Request& req,
       ROS_ERROR("The format of agv pose is wrong!");
       return false;
     }
-    mbp.get_orm_patch(eef_pose, req.current_agv_pose, base_pose_cloud);
+    mbp.get_orm_patch(eef_pose, req.filter_res, req.current_agv_pose, base_pose_cloud);
   } else {
-    mbp.get_orm(eef_pose, base_pose_cloud, req.method);
+    mbp.get_orm(eef_pose, req.filter_res, base_pose_cloud, req.method);
   }
 
   ROS_INFO_STREAM("Point size: " << base_pose_cloud->points.size());

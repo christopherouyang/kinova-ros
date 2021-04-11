@@ -11,15 +11,15 @@ class mm_base_placement {
   /******************************机器人基座放置相关函数******************************/
  public:
   bool load_rm(int point_number1);
-  void get_orm(std::vector<double> eef_pose_vector, pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud,
-               int method = 1);
-  void get_orm_patch(std::vector<double> eef_pose_vector, std::vector<double> current_agv_pose,
-                     pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud);
+  void get_orm(std::vector<double> eef_pose_vector, std::vector<double> filter_res,
+               pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud, int method = 1);
+  void get_orm_patch(std::vector<double> eef_pose_vector, std::vector<double> filter_res,
+                     std::vector<double> current_agv_pose, pcl::PointCloud<pcl::PointNormal>::Ptr base_pose_cloud);
 
  private:
   mm_motion_planner::mm_motion_planner mmp;
 
-  double ori_res, trans_res, agv_movement_delta;
+  double ori_res{0.1}, trans_res{0.1}, agv_movement_delta;
   pcl::PassThrough<pcl::PointNormal> pass;
   pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, des_rm_cloud;
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;

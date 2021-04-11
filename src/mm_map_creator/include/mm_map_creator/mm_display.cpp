@@ -60,33 +60,31 @@ void mm_display::display_map(pcl::PointCloud<pcl::PointNormal>::Ptr rm_cloud, do
     center_point[2] = filter_trans_pcl->points[i].z;
 
     int voxel_number = multi_voxel_color.count(center_point);
-    if (voxel_number > 0) {
-      std::vector<double> color(voxel_number);
-      int count = 0;
-      for (auto it = multi_voxel_color.lower_bound(center_point); it != multi_voxel_color.upper_bound(center_point);
-           ++it) {
-        color[count++] = it->second;
-      }
-      double manip = *std::max_element(std::begin(color), std::end(color));
-      // double manip = * std::min_element(std::begin(color), std::end(color));
-      // double manip = std::accumulate(std::begin(color), std::end(color), 0.0) / color.size();
-      rm_set.insert(make_pair(manip, center_point));
+    if (voxel_number <= 0) {
+      continue;
     }
+    std::vector<double> color(voxel_number);
+    int count = 0;
+    for (auto it = multi_voxel_color.lower_bound(center_point); it != multi_voxel_color.upper_bound(center_point);
+         ++it) {
+      color[count++] = it->second;
+    }
+    double manip = *std::max_element(std::begin(color), std::end(color));
+    // double manip = * std::min_element(std::begin(color), std::end(color));
+    // double manip = std::accumulate(std::begin(color), std::end(color), 0.0) / color.size();
+    rm_set.insert(make_pair(manip, center_point));
   }
   rm_cloud_display->clear();
   rm_cloud_display->height = 1;
 
   for (auto begin = --rm_set.begin(), end = --rm_set.end(); end != begin; end--) {
-    pcl::PointXYZRGB pointrgb;
     std::vector<double> rgb_color(3);
     SetColorByManipulability(end->first, rgb_color);
+    pcl::PointXYZRGB pointrgb(rgb_color[0], rgb_color[1], rgb_color[2]);
 
     pointrgb.x = end->second[0];
     pointrgb.y = end->second[1];
     pointrgb.z = end->second[2];
-    pointrgb.r = rgb_color[0];
-    pointrgb.g = rgb_color[1];
-    pointrgb.b = rgb_color[2];
     rm_cloud_display->push_back(pointrgb);
   }
 }
@@ -114,7 +112,7 @@ void mm_display::display_arrow(pcl::PointCloud<pcl::PointNormal> orm_cloud,
       Eigen::AngleAxisd pitchAngle(0, Eigen::Vector3d::UnitY());
       Eigen::AngleAxisd yawAngle(orm_cloud.points[i].normal_z, Eigen::Vector3d::UnitZ());
       q = yawAngle * pitchAngle * rollAngle;
-      marker.pose.position.z = 0.03;
+      marker.pose.position.z = 0.01;
       marker.pose.orientation.x = q.x();
       marker.pose.orientation.y = q.y();
       marker.pose.orientation.z = q.z();
