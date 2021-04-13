@@ -5,6 +5,8 @@ project(kinova_demo)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
   kinova_driver
   kinova_msgs
   std_msgs
@@ -60,3 +62,7 @@ install(PROGRAMS
   nodes/kinova_demo/run_COMParameters_estimation.py	
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+# orm server
+add_executable(move_in_circle src/move_in_circle.cpp)
+target_link_libraries(move_in_circle ${catkin_LIBRARIES} )

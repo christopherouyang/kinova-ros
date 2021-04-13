@@ -99,7 +99,7 @@ def getcurrentCartesianCommand(prefix_):
     topic_address = '/' + prefix_ + 'driver/out/cartesian_command'
     rospy.Subscriber(topic_address, kinova_msgs.msg.KinovaPose, setcurrentCartesianCommand)
     rospy.wait_for_message(topic_address, kinova_msgs.msg.KinovaPose)
-    print 'position listener obtained message for Cartesian pose. '
+    print ('position listener obtained message for Cartesian pose. ')
 
 
 def setcurrentCartesianCommand(feedback):
@@ -254,7 +254,7 @@ if __name__ == '__main__':
         print('Cartesian pose sent!')
 
     except rospy.ROSInterruptException:
-        print "program interrupted before completion"
+        print ('program interrupted before completion')
 
 
     verboseParser(args.verbose, poses)
