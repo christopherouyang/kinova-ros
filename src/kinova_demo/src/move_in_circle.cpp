@@ -23,29 +23,31 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-constexpr double DOOR_RADIUS = 0.55;
+constexpr double DOOR_RADIUS = 0.51;
 constexpr double DYAW_DT = -0.1;
 constexpr double DYAW_DT_WCHAIR_LINEAR = DYAW_DT * 0.45;
 constexpr double DYAW_DT_WCHAIR_ANGULAR = DYAW_DT * 0.02;
 constexpr double RATE = 6;
 
-double yaw_rate{0.0}, linear_vel{0.0}, startTimeMs{0.0};
+unsigned long long startTimeMs{0};
+double cur_tool_yaw{0.0};
 geometry_msgs::PoseStamped toolPose;
 std::ofstream armPoseFile, wchairPoseFile, armOdomPoseFile, jointTorqueFile, toolWrenchFile;
 
 void toolPoseCallback(const geometry_msgs::PoseStamped& msg) {
   toolPose = msg;
-  double roll, pitch, yaw;
+  double roll, pitch;
   tf::Quaternion quat;
   tf::quaternionMsgToTF(msg.pose.orientation, quat);
-  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+  tf::Matrix3x3(quat).getRPY(roll, pitch, cur_tool_yaw);
   ROS_INFO_THROTTLE(1.0, "Now the EEF pose(xyz-rpy) in arm coordinate is (%.2f, %.2f, %.2f, %.2f, %.2f, %.2f)",
                     msg.pose.position.x, msg.pose.position.y, msg.pose.position.z, roll * 180 / M_PI,
-                    pitch * 180 / M_PI, yaw * 180 / M_PI);
+                    pitch * 180 / M_PI, cur_tool_yaw * 180 / M_PI);
 
   int timeNow = static_cast<int>(COMMON::TimeUtil::GetTimestampMs() - startTimeMs);
   armPoseFile << timeNow << ',' << msg.pose.position.x << ',' << msg.pose.position.y << ',' << msg.pose.position.z
-              << ',' << roll * 180 / M_PI << ',' << pitch * 180 / M_PI << ',' << yaw * 180 / M_PI << ',' << std::endl;
+              << ',' << roll * 180 / M_PI << ',' << pitch * 180 / M_PI << ',' << cur_tool_yaw * 180 / M_PI << ','
+              << std::endl;
 }
 
 void toolWrenchCallback(const geometry_msgs::WrenchStamped& msg) {
@@ -59,11 +61,6 @@ void jointTorqueCallback(const kinova_msgs::JointTorque& msg) {
   int timeNow = static_cast<int>(COMMON::TimeUtil::GetTimestampMs() - startTimeMs);
   jointTorqueFile << timeNow << ',' << msg.joint1 << ',' << msg.joint2 << ',' << msg.joint3 << ',' << msg.joint4 << ','
                   << msg.joint5 << ',' << msg.joint6 << ',' << msg.joint7 << ',' << std::endl;
-}
-
-void velCallback(const geometry_msgs::Twist& cmd_vel) {
-  linear_vel = cmd_vel.linear.x;
-  yaw_rate = cmd_vel.angular.z;
 }
 
 void LogGoalPose(const kinova_msgs::ArmPoseGoal& msg) {
@@ -126,7 +123,6 @@ int main(int argc, char* argv[]) {
   ros::Subscriber poseSub = nh.subscribe("/j2s7s300_driver/out/tool_pose", 1, toolPoseCallback);
   ros::Subscriber toolWrenchSub = nh.subscribe("/j2s7s300_driver/out/tool_wrench", 1, toolWrenchCallback);
   ros::Subscriber jointTorqueSub = nh.subscribe("/j2s7s300_driver/out/joint_torques", 1, jointTorqueCallback);
-  // ros::Subscriber wchairVelSub = nh.subscribe("/wheelchair/cur_vel", 1000, velCallback);
 
   ros::Publisher fingerGoalPub = nh.advertise<kinova_msgs::SetFingersPositionActionGoal>(
       "/j2s7s300_driver/fingers_action/finger_positions/goal", 100);
@@ -135,20 +131,22 @@ int main(int argc, char* argv[]) {
   startTimeMs = COMMON::TimeUtil::GetTimestampMs();
 
   startPose.header.frame_id = "j2s7s300_link_base";
-  startPose.pose.position.x = -0.35;
-  startPose.pose.position.y = -0.65;
-  startPose.pose.position.z = 0.46;
+  startPose.pose.position.x = -0.37;
+  startPose.pose.position.y = -0.60;
+  startPose.pose.position.z = 0.472;
   tf::quaternionTFToMsg(tf::createQuaternionFromRPY(-M_PI / 2, M_PI / 6, M_PI), startPose.pose.orientation);
   kinova_msgs::ArmPoseGoal poseGoal;
   poseGoal.pose = startPose;
   arm_client.sendGoalAndWait(poseGoal);
+  ROS_INFO("Move the end effector to the door handle");
   ros::spinOnce();
 
   kinova_msgs::SetFingersPositionActionGoal fingerGoal;
-  fingerGoal.goal.fingers.finger1 = 5300;
-  fingerGoal.goal.fingers.finger2 = 5300;
-  fingerGoal.goal.fingers.finger3 = 5300;
+  fingerGoal.goal.fingers.finger1 = 5500;
+  fingerGoal.goal.fingers.finger2 = 5500;
+  fingerGoal.goal.fingers.finger3 = 5700;
   fingerGoalPub.publish(fingerGoal);
+  ROS_INFO("Close finger");
   ros::Duration(1.0).sleep();
   ros::spinOnce();
 
@@ -161,45 +159,29 @@ int main(int argc, char* argv[]) {
 
   tf::TransformListener arm_listener, wchair_listener;
   try {
+    wchair_listener.waitForTransform("odom", "base_footprint", ros::Time::now(), ros::Duration(1.0));
+    wchair_listener.transformPose("odom", wchairOriginPose, wchairPoseOdom);
     arm_listener.waitForTransform("odom", "j2s7s300_link_base", ros::Time::now(), ros::Duration(1.0));
     arm_listener.transformPose("odom", startPose, startPoseOdom);
   } catch (tf::TransformException& ex) {
     ROS_WARN("%s", ex.what());
   }
 
-  double theta = 0.0;
-
-  double start_roll, start_pitch, start_yaw;
+  double rotate_theta{0.0}, start_roll{0.0}, start_pitch{0.0}, start_yaw{0.0};
   tf::Quaternion quat;
   tf::quaternionMsgToTF(startPoseOdom.pose.orientation, quat);
   tf::Matrix3x3(quat).getRPY(start_roll, start_pitch, start_yaw);
   double delt_yaw = start_yaw + M_PI / 2;
   double start_x{startPoseOdom.pose.position.x}, start_y{startPoseOdom.pose.position.y};
 
-  // double x_chair{0.0}, y_chair{0.0}, yaw_chair{0.0};
-  // ros::Time current_time, last_time;
   ros::Rate loopRate(RATE);
-  while (ros::ok() && theta > -M_PI / 36 * 17) {
-    // current_time = ros::Time::now();
-    // double dt = (current_time - last_time).toSec();
-    // last_time = current_time;
-    // x_chair += linear_vel * cos(yaw_chair) * dt;
-    // y_chair += linear_vel * sin(yaw_chair) * dt;
-    // yaw_chair += yaw_rate * dt;
+  while (ros::ok() && rotate_theta > -M_PI / 36 * 17) {
+    double delt_x_odom = (DOOR_RADIUS - 0.045) * std::sin(rotate_theta);
+    double delt_y_odom = DOOR_RADIUS * (1 - std::cos(rotate_theta));
+    goalPoseOdom.pose.position.x = start_x + delt_x_odom * std::cos(delt_yaw) - delt_y_odom * std::sin(delt_yaw);
+    goalPoseOdom.pose.position.y = start_y + delt_x_odom * std::sin(delt_yaw) + delt_y_odom * std::cos(delt_yaw);
 
-    // ROS_INFO_THROTTLE(2.0, "the wheehchair odom is (%.2f,%.2f,%.2f)", x_chair, y_chair, yaw_chair);
-
-    // tf::quaternionTFToMsg(tf::createQuaternionFromRPY(-M_PI / 2, M_PI / 6, M_PI + theta - yaw_chair),
-    //                       poseGoal.pose.pose.orientation);
-    // poseGoal.pose.pose.position.x = startPose.pose.position.x + DOOR_RADIUS * (1 - std::cos(theta))` - y_chair;
-    // poseGoal.pose.pose.position.y = startPose.pose.position.y - DOOR_RADIUS * std::sin(theta) + x_chair;
-
-    double delt_x_wchair = DOOR_RADIUS * std::sin(theta);
-    double delt_y_wchair = DOOR_RADIUS * (1 - std::cos(theta));
-    goalPoseOdom.pose.position.x = start_x + delt_x_wchair * std::cos(delt_yaw) - delt_y_wchair * std::sin(delt_yaw);
-    goalPoseOdom.pose.position.y = start_y + delt_x_wchair * std::sin(delt_yaw) + delt_y_wchair * std::cos(delt_yaw);
-
-    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(start_roll, start_pitch, start_yaw + theta),
+    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(start_roll, start_pitch, start_yaw + rotate_theta),
                           goalPoseOdom.pose.orientation);
     try {
       arm_listener.waitForTransform("odom", "j2s7s300_link_base", ros::Time::now(), ros::Duration(0.5));
@@ -217,11 +199,11 @@ int main(int argc, char* argv[]) {
     }
 
     poseGoal.pose.pose = goalPoseArm.pose;
-    poseGoal.pose.pose.position.z = 0.46;
+    poseGoal.pose.pose.position.z = 0.472;
     arm_client.sendGoal(poseGoal);
     wchairVelPub.publish(cmd_vel);
     LogGoalPose(poseGoal);
-    theta += DYAW_DT / RATE;
+    rotate_theta += DYAW_DT / RATE;
 
     double roll, pitch, yaw;
     tf::quaternionMsgToTF(toolPoseOdom.pose.orientation, quat);
@@ -251,12 +233,30 @@ int main(int argc, char* argv[]) {
   fingerGoal.goal.fingers.finger2 = 0;
   fingerGoal.goal.fingers.finger3 = 0;
   fingerGoalPub.publish(fingerGoal);
+  ROS_INFO("Open finger");
   ros::spinOnce();
-  ros::Duration(1).sleep();
+  ros::Duration(0.75).sleep();
 
   stopForceClient.call(stopSrv);
   ROS_INFO("stop force control");
   ros::spinOnce();
+
+  poseGoal.pose.pose.position.x = toolPose.pose.position.x + 0.1 * sin(cur_tool_yaw);
+  poseGoal.pose.pose.position.y = toolPose.pose.position.y - 0.1 * cos(cur_tool_yaw);
+  ROS_INFO("Move away from the door handle");
+  LogGoalPose(poseGoal);
+  arm_client.sendGoalAndWait(poseGoal);
+
+  ros::Duration(0.5).sleep();
+  ros::spinOnce();
+
+  poseGoal.pose.pose.position.x = toolPose.pose.position.x + 0.3 * cos(cur_tool_yaw);
+  poseGoal.pose.pose.position.y = toolPose.pose.position.y + 0.3 * sin(cur_tool_yaw);
+  tf::quaternionTFToMsg(tf::createQuaternionFromRPY(-M_PI / 2, M_PI / 6, M_PI), startPose.pose.orientation);
+  poseGoal.pose.pose.orientation = startPose.pose.orientation;
+  ROS_INFO("move the arm back");
+  LogGoalPose(poseGoal);
+  arm_client.sendGoalAndWait(poseGoal);
 
   armPoseFile.close();
   wchairPoseFile.close();
