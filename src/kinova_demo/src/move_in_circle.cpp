@@ -24,7 +24,7 @@
 #include <sys/types.h>
 
 constexpr double DOOR_RADIUS = 0.51;
-constexpr double DOOR_HANDLE_R = 0.063;
+constexpr double DOOR_HANDLE_R = 0.083;
 constexpr double PULL_VEL = -0.1;
 constexpr double PULL_VEL_WCHAIR_LINEAR = PULL_VEL * 0.45;
 constexpr double PULL_VEL_WCHAIR_ANGULAR = PULL_VEL * 0.02;
@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
   startPose.header.frame_id = "j2s7s300_link_base";
   startPose.pose.position.x = -0.37;
   startPose.pose.position.y = -0.60;
-  startPose.pose.position.z = 0.472;
+  startPose.pose.position.z = 0.47;
   tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM, START_YAW_ARM),
                         startPose.pose.orientation);
   kinova_msgs::ArmPoseGoal poseGoal;
@@ -194,10 +194,10 @@ int main(int argc, char* argv[]) {
 
   ros::Rate loopRate(RATE);
   double rotate_theta = 0.0;
-  while (ros::ok() && rotate_theta < M_PI / 4) {
+  while (ros::ok() && rotate_theta < 7 * M_PI / 24) {
     poseGoal.pose.pose.position.x = startPose.pose.position.x + DOOR_HANDLE_R * (std::cos(rotate_theta) - 1);
     poseGoal.pose.pose.position.z = startPose.pose.position.z - DOOR_HANDLE_R * std::sin(rotate_theta);
-    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM, START_YAW_ARM + rotate_theta),
+    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM - rotate_theta, START_YAW_ARM),
                           poseGoal.pose.pose.orientation);
     rotate_theta += ROTATE_VEL / RATE;
     arm_client.sendGoal(poseGoal);
@@ -206,19 +206,18 @@ int main(int argc, char* argv[]) {
 
   arm_client.sendGoalAndWait(poseGoal);
   ROS_INFO("Finish turning the door handle");
-  poseGoal.pose.pose.position.y += 0.045;
-  poseGoal.pose.pose.position.x += 0.02;
-  startPose.pose.position.y += 0.045;
-  startPose.pose.position.x += 0.02;
+  poseGoal.pose.pose.position.y += 0.04;
+  poseGoal.pose.pose.position.x += 0.012;
+  startPose.pose.position.y += 0.04;
+  startPose.pose.position.x += 0.012;
   arm_client.sendGoalAndWait(poseGoal);
   LogGoalPose(poseGoal);
   ROS_INFO("pull the door handle open");
 
-  rotate_theta = 0.0;
   while (ros::ok() && rotate_theta > 0) {
-    poseGoal.pose.pose.position.x = startPose.pose.position.x + DOOR_HANDLE_R * (std::cos(M_PI / 4 - rotate_theta) - 1);
-    poseGoal.pose.pose.position.z = endPose.pose.position.z - DOOR_HANDLE_R * std::sin(M_PI / 4 - rotate_theta);
-    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM, START_YAW_ARM + rotate_theta),
+    poseGoal.pose.pose.position.x = startPose.pose.position.x + DOOR_HANDLE_R * (std::cos(rotate_theta) - 1);
+    poseGoal.pose.pose.position.z = startPose.pose.position.z - DOOR_HANDLE_R * std::sin(rotate_theta);
+    tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM - rotate_theta, START_YAW_ARM),
                           poseGoal.pose.pose.orientation);
     rotate_theta -= ROTATE_VEL / RATE;
     arm_client.sendGoal(poseGoal);
@@ -237,7 +236,9 @@ int main(int argc, char* argv[]) {
   try {
     wchair_listener.waitForTransform("odom", "base_footprint", ros::Time::now(), ros::Duration(1.0));
     wchair_listener.transformPose("odom", wchairOriginPose, wchairPoseOdom);
+    wchair_listener.transformPose("odom", wchairOriginPose, wchairPoseOdom);
     arm_listener.waitForTransform("odom", "j2s7s300_link_base", ros::Time::now(), ros::Duration(1.0));
+    arm_listener.transformPose("odom", startPose, startPoseOdom);
     arm_listener.transformPose("odom", startPose, startPoseOdom);
   } catch (tf::TransformException& ex) {
     ROS_WARN("%s", ex.what());
