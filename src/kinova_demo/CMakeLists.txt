@@ -66,5 +66,5 @@ install(PROGRAMS
 )
 
 # orm server
-add_executable(move_in_circle src/move_in_circle.cpp)
-target_link_libraries(move_in_circle ${catkin_LIBRARIES} )
+add_executable(door_open src/door_open.cpp)
+target_link_libraries(door_open ${catkin_LIBRARIES} )
