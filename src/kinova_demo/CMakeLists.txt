@@ -65,6 +65,8 @@ install(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-# orm server
 add_executable(door_open src/door_open.cpp)
 target_link_libraries(door_open ${catkin_LIBRARIES} )
+
+add_executable(right_door_open src/right_door_open.cpp)
+target_link_libraries(right_door_open ${catkin_LIBRARIES} )
