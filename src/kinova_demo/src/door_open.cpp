@@ -164,6 +164,7 @@ int main(int argc, char* argv[]) {
 
   goalPoseOdom.header.frame_id = "odom";
   goalPoseArm.header.frame_id = "j2s7s300_link_base";
+  wchairOriginPose.header.frame_id = "base_footprint";
   wchairOriginPose.pose.orientation.w = 1;
 
   armPoseFile.open(folderAddr + "arm_pose.csv", std::ios::out);
@@ -259,7 +260,7 @@ int main(int argc, char* argv[]) {
   arm_client.sendGoalAndWait(poseGoal);
   LogGoalPose(poseGoal);
   ROS_INFO("start pull left door");
-  startForceClient.call(startSrv);
+  // startForceClient.call(startSrv);
   ROS_INFO("start force control");
 
   geometry_msgs::Twist cmd_vel;
@@ -269,7 +270,8 @@ int main(int argc, char* argv[]) {
   tf::TransformListener arm_listener, wchair_listener;
   std::vector<double> start_pos{0.0, 0.0}, start_ori{0.0, 0.0, 0.0};
   ConfigStartPoseOdom(arm_listener, wchair_listener, start_pos, start_ori);
-  double delt_yaw = start_ori[2] + M_PI / 2;
+  double delt_yaw = tf::getYaw(wchairPoseOdom.pose.orientation);
+  ROS_INFO("the start yaw odom is %.2f", delt_yaw);
 
   rotate_theta = 0.0;
   while (ros::ok() && rotate_theta > -M_PI / 12 * 7) {
@@ -330,8 +332,8 @@ int main(int argc, char* argv[]) {
            DOOR_RADIUS - fabs(-door_x * std::sin(delt_yaw) + door_y * std::cos(delt_yaw)), yaw_door * 180 / M_PI,
            end_yaw * 180 / M_PI);
 
-  poseGoal.pose.pose.position.x = endPose.pose.position.x + 0.05 * sin(end_yaw);
-  poseGoal.pose.pose.position.y = endPose.pose.position.y - 0.05 * cos(end_yaw);
+  poseGoal.pose.pose.position.x = endPose.pose.position.x + 0.03 * sin(end_yaw);
+  poseGoal.pose.pose.position.y = endPose.pose.position.y - 0.03 * cos(end_yaw);
   ROS_INFO("Move away from the door handle");
   LogGoalPose(poseGoal);
   arm_client.sendGoalAndWait(poseGoal);

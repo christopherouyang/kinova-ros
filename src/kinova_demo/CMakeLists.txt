@@ -70,3 +70,6 @@ target_link_libraries(door_open ${catkin_LIBRARIES} )
 
 add_executable(right_door_open src/right_door_open.cpp)
 target_link_libraries(right_door_open ${catkin_LIBRARIES} )
+
+add_executable(right_door_start src/right_door_start.cpp)
+target_link_libraries(right_door_start ${catkin_LIBRARIES} )
