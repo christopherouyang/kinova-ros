@@ -12,6 +12,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <kinova_msgs/ArmPoseActionGoal.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Pose2D.h>
 #include <tf/tf.h>
 #include <kinova_msgs/Start.h>
 #include <kinova_msgs/Stop.h>
@@ -134,11 +135,11 @@ void ConfigStartPoseOdom(const tf::TransformListener& arm_listener, const tf::Tr
   start_pos[1] = startPoseOdom.pose.position.y;
 }
 
-void CloseFinger(const ros::Publisher& fingerGoalPub) {
+void CloseFinger(const ros::Publisher& fingerGoalPub, double finger1, double finger2, double finger3) {
   kinova_msgs::SetFingersPositionActionGoal fingerGoal;
-  fingerGoal.goal.fingers.finger1 = 5500;
-  fingerGoal.goal.fingers.finger2 = 5500;
-  fingerGoal.goal.fingers.finger3 = 5700;
+  fingerGoal.goal.fingers.finger1 = finger1;
+  fingerGoal.goal.fingers.finger2 = finger2;
+  fingerGoal.goal.fingers.finger3 = finger3;
   fingerGoalPub.publish(fingerGoal);
   ROS_INFO("Close finger");
   ros::Duration(1.0).sleep();
@@ -154,6 +155,15 @@ void OpenFinger(const ros::Publisher& fingerGoalPub) {
   ROS_INFO("Open finger");
   ros::Duration(1.0).sleep();
   ros::spinOnce();
+}
+
+void moveWchairInPos(double x, double theta, double sleepTime, const ros::Publisher& wchairPosPub) {
+  geometry_msgs::Pose2D wchairCmdPos;
+  wchairCmdPos.x = x;
+  wchairCmdPos.y = 0.0;
+  wchairCmdPos.theta = theta;
+  wchairPosPub.publish(wchairCmdPos);
+  ros::Duration(sleepTime).sleep();
 }
 
 int main(int argc, char* argv[]) {
@@ -208,11 +218,12 @@ int main(int argc, char* argv[]) {
   ros::Publisher fingerGoalPub = nh.advertise<kinova_msgs::SetFingersPositionActionGoal>(
       "/j2s7s300_driver/fingers_action/finger_positions/goal", 100);
   ros::Publisher wchairVelPub = nh.advertise<geometry_msgs::Twist>("/wheelchair/cmd_vel", 1);
+  ros::Publisher wchairPosPub = nh.advertise<geometry_msgs::Pose2D>("/wheelchair/cmd_vel", 1);
 
   startTimeMs = COMMON::TimeUtil::GetTimestampMs();
 
   startPose.header.frame_id = "j2s7s300_link_base";
-  startPose.pose.position.x = -0.48;
+  startPose.pose.position.x = -0.5;
   startPose.pose.position.y = -0.60;
   startPose.pose.position.z = 0.46;
   tf::quaternionTFToMsg(tf::createQuaternionFromRPY(START_ROLL_ARM, START_PITCH_ARM, START_YAW_ARM),
@@ -223,7 +234,7 @@ int main(int argc, char* argv[]) {
   ROS_INFO("Move the end effector to the door handle");
   ros::spinOnce();
 
-  CloseFinger(fingerGoalPub);
+  CloseFinger(fingerGoalPub, 5500, 5500, 5700);
 
   ros::Rate loopRate(RATE);
   double rotate_theta = 0.0;
@@ -347,13 +358,22 @@ int main(int argc, char* argv[]) {
   arm_client.sendGoalAndWait(poseGoal);
   ros::spinOnce();
 
-  poseGoal.pose.pose.position.x = endPose.pose.position.x - 0.3 * sin(end_yaw) + 0.25 * cos(end_yaw);
-  poseGoal.pose.pose.position.y = endPose.pose.position.y + 0.3 * cos(end_yaw) + 0.25 * sin(end_yaw);
+  poseGoal.pose.pose.position.x = endPose.pose.position.x - 0.3 * sin(end_yaw) + 0.2 * cos(end_yaw);
+  poseGoal.pose.pose.position.y = endPose.pose.position.y + 0.3 * cos(end_yaw) + 0.2 * sin(end_yaw);
   poseGoal.pose.pose.orientation = startPose.pose.orientation;
   ROS_INFO("move the arm to right");
   LogGoalPose(poseGoal);
   arm_client.sendGoalAndWait(poseGoal);
   ros::spinOnce();
+
+  // move the wheelchair to the right position
+  moveWchairInPos(-0.55, 0.0, 3.0, wchairPosPub);
+  geometry_msgs::Pose2D wchairCmdPos;
+  moveWchairInPos(0.0, -atan2(0.7, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
+  moveWchairInPos(sqrt(1.49), 0.0, 10.0, wchairPosPub);
+  moveWchairInPos(0.0, atan2(0.7, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
+
+  // start open the right door
 
   armPoseFile.close();
   armOdomPoseFile.close();
