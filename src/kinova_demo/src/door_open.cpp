@@ -380,10 +380,10 @@ int main(int argc, char* argv[]) {
   ros::spinOnce();
 
   // move the wheelchair to the right position
-  moveWchairInPos(-0.63, 0.0, 3.0, wchairPosPub);
-  moveWchairInPos(0.0, -atan2(0.77, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
-  moveWchairInPos(sqrt(1.592), 0.0, 10.0, wchairPosPub);
-  moveWchairInPos(0.0, atan2(0.77, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
+  moveWchairInPos(-0.62, 0.0, 3.0, wchairPosPub);
+  moveWchairInPos(0.0, -atan2(0.8, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
+  moveWchairInPos(sqrt(1.64), 0.0, 10.0, wchairPosPub);
+  moveWchairInPos(0.0, atan2(0.8, 1.0) * 180 / M_PI, 2.0, wchairPosPub);
 
   startPose.pose.position.x = 0.3;
   poseGoal.pose = startPose;
@@ -403,10 +403,10 @@ int main(int argc, char* argv[]) {
   ros::spinOnce();
   ROS_INFO("move the arm the the left of right door");
 
+  poseGoal.pose.pose.position.x = 0.05;
   startPose.pose.position.x = 0.05;
-  poseGoal.pose = startPose;
-  arm_client.sendGoal(poseGoal);
-  ros::Duration(3.0).sleep();
+  arm_client.sendGoalAndWait(poseGoal);
+  ros::Duration(0.5).sleep();
   ros::spinOnce();
   ROS_INFO("Move the end effector to the right door");
 
