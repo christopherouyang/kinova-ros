@@ -122,9 +122,9 @@ void ConfigStartPoseOdom(const tf::TransformListener& arm_listener, const tf::Tr
 
 void CloseFinger(const ros::Publisher& fingerGoalPub) {
   kinova_msgs::SetFingersPositionActionGoal fingerGoal;
-  fingerGoal.goal.fingers.finger1 = 4200;
-  fingerGoal.goal.fingers.finger2 = 4200;
-  fingerGoal.goal.fingers.finger3 = 4200;
+  fingerGoal.goal.fingers.finger1 = 4500;
+  fingerGoal.goal.fingers.finger2 = 4500;
+  fingerGoal.goal.fingers.finger3 = 4800;
   fingerGoalPub.publish(fingerGoal);
   ROS_INFO("Close finger");
   ros::Duration(1.0).sleep();
@@ -247,6 +247,7 @@ int main(int argc, char* argv[]) {
   LogCurrentPose();
   ros::Duration(2.0).sleep();
   ros::spinOnce();
+
   poseGoal.pose = toolPose;
   arm_client.sendGoal(poseGoal);
   ros::Duration(1.0).sleep();
@@ -254,6 +255,7 @@ int main(int argc, char* argv[]) {
 
   OpenFinger(fingerGoalPub);
   ros::spinOnce();
+  ROS_INFO("Open finger");
 
   poseGoal.pose = toolPose;
   poseGoal.pose.pose.position.y += 0.1;
